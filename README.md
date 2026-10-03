@@ -143,7 +143,37 @@ Também existe o botão **Experimentar com conta demo**. As credenciais de produ
 3. Configure a aceleração de acordo com a [documentação do Android Emulator](https://developer.android.com/studio/run/emulator-acceleration).
 4. Inicie o dispositivo, aguarde a tela inicial do Android e execute **app**.
 
-Opcionalmente, `scripts/prepare-emulator.ps1` prepara o AVD local `PlannerApp_API_35`. `scripts/start-emulator.ps1` tenta iniciá-lo sem janela e sem aceleração, útil para diagnóstico. Essa tentativa não concluiu o boot neste computador. O script não instala drivers nem altera a virtualização do Windows.
+`scripts/prepare-emulator.ps1` prepara ou registra o AVD `PlannerApp_API_35` na localização padrão do Android. Se ele já existir na pasta antiga do SDK local, somente o registro é copiado; os dados do dispositivo permanecem no lugar. Pacotes já instalados não são baixados novamente.
+
+### Visualizar dentro do VS Code
+
+1. Instale [EmbeDroid](https://marketplace.visualstudio.com/items?itemName=UtpalBarman.embedroid) pela aba Extensions.
+2. Nas configurações da extensão, indique em **EmbeDroid: SDK Path** o SDK apontado por `local.properties`. O SDK local do bootstrap fica em `%TEMP%\PlannerApp-android-sdk`; informe o caminho absoluto expandido, não o texto `%TEMP%`.
+3. Execute a preparação do AVD:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-emulator.ps1
+```
+
+O emulador precisa de aceleração. No Windows, o projeto utiliza **Windows Hypervisor Platform**, conforme a [orientação oficial do Android](https://developer.android.com/studio/run/emulator-acceleration). A virtualização VT-x/SVM deve estar habilitada na BIOS. Para habilitar o recurso do Windows:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/enable-emulator-acceleration.ps1
+```
+
+Esse script solicita autorização UAC de administrador, habilita somente `HypervisorPlatform` e registra o resultado em `verification/local/acceleration-result.json`. Ele não reinicia o computador. Se o resultado indicar `RestartNeeded: true`, salve seu trabalho e reinicie o Windows antes de continuar. Nenhuma proteção do Windows é desativada e a política global de execução do PowerShell é preservada.
+
+Depois do reinício, na raiz do projeto:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-emulator.ps1 -InstallApp
+```
+
+O comando utiliza aceleração, inicia o AVD sem janela, aguarda `sys.boot_completed`, instala o APK debug já compilado e abre o planner. Se o APK ainda não existir, execute `scripts/build.ps1` primeiro. Ele também pode reutilizar o mesmo AVD que já esteja iniciado. Não apaga dados do dispositivo.
+
+No EmbeDroid, clique em **Refresh** e em **Open Embedded View** para o dispositivo em **Running Devices**. No computador configurado nesta sessão, também foi criada a tarefa local **Planner: abrir no emulador**, acessível por **Terminal → Run Task**. As configurações `.vscode/` contêm caminhos pessoais e são ignoradas pelo Git.
+
+Para utilizar a janela tradicional do emulador, acrescente `-Window` ao comando. Falhas de inicialização ficam em `verification/local/emulator-out.log` e `emulator-error.log`.
 
 ## Testar em celular físico
 
