@@ -6,12 +6,14 @@ import br.edu.fsa.planner.ui.theme.PlannerColors
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Locale
 
 val PlannerLocale: Locale = Locale.forLanguageTag("pt-BR")
 fun LocalDate.longLabel(): String = format(DateTimeFormatter.ofPattern("d 'de' MMMM", PlannerLocale))
 fun LocalDate.weekdayLabel(): String = format(DateTimeFormatter.ofPattern("EEEE", PlannerLocale))
 fun LocalDate.shortLabel(): String = format(DateTimeFormatter.ofPattern("dd/MM", PlannerLocale))
+fun LocalDate.accessibilityLabel(): String = format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(PlannerLocale))
 fun YearMonth.titleLabel(): String = format(DateTimeFormatter.ofPattern("MMMM yyyy", PlannerLocale))
 fun ItemType.label(): Int = when (this) {
     ItemType.TASK -> R.string.type_task; ItemType.EVENT -> R.string.type_event

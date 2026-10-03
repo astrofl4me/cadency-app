@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.PlannerApp" parent="Theme.PlannerApp.Base">
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+</resources>

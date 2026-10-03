@@ -21,11 +21,13 @@ import br.edu.fsa.planner.ui.theme.PlannerDimens as D
 
 @Composable
 fun PlannerHeader(eyebrow: String, title: String, subtitle: String) {
-    Text(eyebrow, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-    Spacer(Modifier.height(D.Small))
-    Text(title, style = MaterialTheme.typography.headlineLarge)
-    Spacer(Modifier.height(D.Tiny))
-    Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Column {
+        Text(eyebrow, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.height(D.Small))
+        Text(title, style = MaterialTheme.typography.headlineLarge)
+        Spacer(Modifier.height(D.Tiny))
+        Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
 }
 
 @Composable
@@ -68,7 +70,7 @@ fun PlannerItemRow(item: PlannerItem, onToggle: () -> Unit, onEdit: () -> Unit, 
                     style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 Text(stringResource(item.category.label()), style = MaterialTheme.typography.labelMedium, color = item.category.color())
                 if (item.type == ItemType.EVENT) Text(stringResource(R.string.type_event), style = MaterialTheme.typography.labelMedium)
-                if (item.priority == Priority.HIGH || item.type == ItemType.PRIORITY) Text(stringResource(R.string.high_priority_label),
+                if (item.priority == Priority.HIGH || item.type == ItemType.PRIORITY) Text(stringResource(R.string.priority_status, stringResource(item.priority.label())),
                     style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
             }
             if (!compact && item.description.isNotBlank()) Text(item.description, maxLines = 2,

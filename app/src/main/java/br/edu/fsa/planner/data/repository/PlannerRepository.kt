@@ -5,11 +5,15 @@ import br.edu.fsa.planner.data.local.entity.toEntity
 import br.edu.fsa.planner.data.local.entity.toModel
 import br.edu.fsa.planner.domain.model.*
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.time.Clock
 import java.time.LocalDate
 import java.time.YearMonth
 
 class PlannerRepository(private val dao: PlannerDao, private val clock: Clock = Clock.systemDefaultZone()) {
+    private val noteMutex = Mutex()
     fun observeDay(date: LocalDate) = dao.observeDay(date).map { rows -> rows.map { it.toModel() } }
     fun observeRange(interval: DateInterval) = dao.observeRange(interval.start, interval.endInclusive).map { rows -> rows.map { it.toModel() } }
     fun observeMonth(month: YearMonth) = observeRange(PlannerDates.month(month))
@@ -31,4 +35,10 @@ class PlannerRepository(private val dao: PlannerDao, private val clock: Clock = 
     }
     fun observeNote(key: String) = dao.observeNote(key).map { it?.toModel() ?: PlannerNote(key) }
     suspend fun saveNote(note: PlannerNote) { dao.saveNote(note.toEntity()) }
+    suspend fun updateNote(key: String, transform: (PlannerNote) -> PlannerNote) {
+        noteMutex.withLock {
+            val current = dao.observeNote(key).first()?.toModel() ?: PlannerNote(key)
+            dao.saveNote(transform(current).toEntity())
+        }
+    }
 }

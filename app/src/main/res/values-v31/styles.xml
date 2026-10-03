@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.PlannerApp" parent="Theme.PlannerApp.Base">
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowSplashScreenBackground">@color/planner_paper</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_planner</item>
+    </style>
+</resources>

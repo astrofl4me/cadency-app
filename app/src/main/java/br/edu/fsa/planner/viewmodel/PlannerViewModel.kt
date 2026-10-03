@@ -92,12 +92,22 @@ class PlannerViewModel(private val repository: PlannerRepository, private val sa
     fun toggle(item: PlannerItem) { mutate(if (item.isCompleted) PlannerNotice.REOPENED else PlannerNotice.COMPLETED) {
         repository.setCompleted(item, !item.isCompleted)
     } }
-    fun saveDailyNote(text: String) { mutate(PlannerNotice.NOTE_SAVED) { repository.saveNote(daily.value.note.copy(text = text.take(2000))) } }
-    fun setMood(mood: Mood) { mutate(null) { repository.saveNote(daily.value.note.copy(mood = mood)) } }
-    fun saveWeeklyNote(text: String, highlight: Boolean) { mutate(PlannerNotice.NOTE_SAVED) {
-        val note = weekly.value.note
-        repository.saveNote(if (highlight) note.copy(highlight = text.take(2000)) else note.copy(text = text.take(2000)))
-    } }
+    fun saveDailyNote(text: String) {
+        val key = "day:${currentDay()}"
+        mutate(PlannerNotice.NOTE_SAVED) { repository.updateNote(key) { it.copy(text = text.take(2000)) } }
+    }
+    fun setMood(mood: Mood) {
+        val key = "day:${currentDay()}"
+        mutate(null) { repository.updateNote(key) { it.copy(mood = mood) } }
+    }
+    fun saveWeeklyNote(text: String, highlight: Boolean) {
+        val key = "week:${LocalDate.parse(week.value)}"
+        mutate(PlannerNotice.NOTE_SAVED) {
+            repository.updateNote(key) {
+                if (highlight) it.copy(highlight = text.take(2000)) else it.copy(text = text.take(2000))
+            }
+        }
+    }
     fun editorFinished(result: EditorResult) { viewModelScope.launch { noticeChannel.send(if (result == EditorResult.SAVED) PlannerNotice.SAVED else PlannerNotice.DELETED) } }
 
     private fun mutate(success: PlannerNotice?, operation: suspend () -> Unit) {

@@ -15,8 +15,7 @@ class PlannerApplication : Application() {
     val container by lazy { AppContainer(this) }
 }
 
-class AppContainer(context: Context) {
-    val authRepository: AuthRepository = LocalAuthRepository(context.sessionDataStore)
+class AppContainer(context: Context, val authRepository: AuthRepository = LocalAuthRepository(context.sessionDataStore)) {
     private val database by lazy {
         Room.databaseBuilder(context.applicationContext, PlannerDatabase::class.java, "planner.db").build()
     }

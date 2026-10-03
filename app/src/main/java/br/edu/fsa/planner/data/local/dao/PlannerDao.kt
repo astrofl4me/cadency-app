@@ -8,7 +8,7 @@ import java.time.LocalDate
 
 @Dao
 interface PlannerDao {
-    @Query("SELECT * FROM planner_items WHERE date = :date ORDER BY isCompleted, CASE WHEN startTime IS NULL THEN 1 ELSE 0 END, startTime, priority DESC, id")
+    @Query("SELECT * FROM planner_items WHERE date = :date ORDER BY isCompleted, CASE WHEN startTime IS NULL THEN 1 ELSE 0 END, startTime, CASE priority WHEN 'HIGH' THEN 0 WHEN 'MEDIUM' THEN 1 ELSE 2 END, id")
     fun observeDay(date: LocalDate): Flow<List<PlannerItemEntity>>
 
     @Query("SELECT * FROM planner_items WHERE date BETWEEN :start AND :end ORDER BY date, isCompleted, CASE WHEN startTime IS NULL THEN 1 ELSE 0 END, startTime, id")

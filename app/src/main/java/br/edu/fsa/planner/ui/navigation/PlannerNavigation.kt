@@ -46,7 +46,7 @@ import kotlinx.coroutines.isActive
 import br.edu.fsa.planner.domain.model.ItemType
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.runtime.remember
 import java.time.LocalDate
 
@@ -69,7 +69,7 @@ fun PlannerNavigation(container: AppContainer) {
     val navController = rememberNavController()
     val entry by navController.currentBackStackEntryAsState()
     val snackbar = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(lifecycleOwner, planner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -77,14 +77,14 @@ fun PlannerNavigation(container: AppContainer) {
         }
     }
     fun addItem(date: LocalDate, type: ItemType) { navController.navigate("editor?date=$date&type=${type.name}") }
-    LaunchedEffect(planner) {
+    LaunchedEffect(planner, resources) {
         planner.notices.collect { notice ->
             val message = when (notice) {
                 PlannerNotice.SAVED -> R.string.item_saved; PlannerNotice.DELETED -> R.string.item_deleted
                 PlannerNotice.COMPLETED -> R.string.item_completed; PlannerNotice.REOPENED -> R.string.item_reopened
                 PlannerNotice.NOTE_SAVED -> R.string.note_saved; PlannerNotice.ERROR -> R.string.storage_error
             }
-            snackbar.showSnackbar(context.getString(message))
+            snackbar.showSnackbar(resources.getString(message))
         }
     }
     LaunchedEffect(session.ready, session.user) {

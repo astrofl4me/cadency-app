@@ -1,6 +1,7 @@
 package br.edu.fsa.planner.ui.screens.monthly
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,9 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.Role
 import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.*
 import br.edu.fsa.planner.ui.components.*
@@ -86,23 +89,25 @@ private fun CalendarGrid(state: MonthlyUiState, onSelect: (LocalDate) -> Unit) {
                             val dayItems = grouped[date].orEmpty()
                             val isSelected = date == state.selectedDate
                             val isToday = date == state.today
-                            val description = stringResource(R.string.calendar_day_description,
-                                "${date.weekdayLabel()}, ${date.longLabel()} de ${date.year}", dayItems.size,
-                                if (isToday) stringResource(R.string.calendar_today_suffix) else "")
-                            Surface(onClick = { onSelect(date) }, modifier = Modifier.weight(1f).height(D.CalendarCell).padding(D.Tiny)
-                                .semantics { contentDescription = description; selected = isSelected },
-                                color = when { isSelected -> MaterialTheme.colorScheme.primary; isToday -> MaterialTheme.colorScheme.primaryContainer; else -> MaterialTheme.colorScheme.surface },
-                                shape = MaterialTheme.shapes.medium,
-                                border = if (isToday) BorderStroke(D.Hairline, MaterialTheme.colorScheme.primary) else null) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                                    Text(date.dayOfMonth.toString(), style = MaterialTheme.typography.bodyMedium,
-                                        color = when { isSelected -> MaterialTheme.colorScheme.onPrimary
-                                            YearMonth.from(date) != state.month -> MaterialTheme.colorScheme.onSurfaceVariant
-                                            else -> MaterialTheme.colorScheme.onSurface })
-                                    Row(horizontalArrangement = Arrangement.spacedBy(D.Tiny)) {
-                                        dayItems.map { it.category }.distinct().take(3).forEach { category ->
-                                            Surface(color = if (isSelected) MaterialTheme.colorScheme.onPrimary else category.color(),
-                                                shape = MaterialTheme.shapes.extraLarge, modifier = Modifier.size(D.Indicator)) {}
+                            val todaySuffix = if (isToday) stringResource(R.string.calendar_today_suffix) else ""
+                            val description = if (dayItems.isEmpty()) stringResource(R.string.calendar_day_without_items, date.accessibilityLabel(), todaySuffix)
+                            else pluralStringResource(R.plurals.calendar_day_description, dayItems.size, date.accessibilityLabel(), dayItems.size, todaySuffix)
+                            Box(Modifier.weight(1f).height(D.CalendarCell).clickable(role = Role.Button) { onSelect(date) }
+                                .semantics { contentDescription = description; selected = isSelected }) {
+                                Surface(modifier = Modifier.fillMaxSize().padding(D.Tiny),
+                                    color = when { isSelected -> MaterialTheme.colorScheme.primary; isToday -> MaterialTheme.colorScheme.primaryContainer; else -> MaterialTheme.colorScheme.surface },
+                                    shape = MaterialTheme.shapes.medium,
+                                    border = if (isToday) BorderStroke(D.Hairline, MaterialTheme.colorScheme.primary) else null) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                        Text(date.dayOfMonth.toString(), style = MaterialTheme.typography.bodyMedium,
+                                            color = when { isSelected -> MaterialTheme.colorScheme.onPrimary
+                                                YearMonth.from(date) != state.month -> MaterialTheme.colorScheme.onSurfaceVariant
+                                                else -> MaterialTheme.colorScheme.onSurface })
+                                        Row(horizontalArrangement = Arrangement.spacedBy(D.Tiny)) {
+                                            dayItems.map { it.category }.distinct().take(3).forEach { category ->
+                                                Surface(color = if (isSelected) MaterialTheme.colorScheme.onPrimary else category.color(),
+                                                    shape = MaterialTheme.shapes.extraLarge, modifier = Modifier.size(D.Indicator)) {}
+                                            }
                                         }
                                     }
                                 }
