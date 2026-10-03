@@ -2,4 +2,23 @@
 <resources>
     <string name="app_name">Meu Planner</string>
     <string name="welcome">Um dia de cada vez.</string>
+    <string name="tab_today">Hoje</string>
+    <string name="tab_week">Semana</string>
+    <string name="tab_month">Mês</string>
+    <string name="tab_settings">Perfil</string>
+    <string name="login_tagline">Abra espaço para o que importa. Seu dia começa aqui.</string>
+    <string name="email">E-mail</string>
+    <string name="password">Senha</string>
+    <string name="email_error">Informe um e-mail válido.</string>
+    <string name="password_error">A senha precisa ter pelo menos 6 caracteres.</string>
+    <string name="show_password">Mostrar senha</string>
+    <string name="hide_password">Ocultar senha</string>
+    <string name="credentials_error">E-mail ou senha incorretos. Use a conta demo deste MVP.</string>
+    <string name="storage_error">Não foi possível acessar os dados locais. Tente novamente.</string>
+    <string name="sign_in">Entrar</string>
+    <string name="entering">Aguarde…</string>
+    <string name="try_demo">Experimentar com conta demo</string>
+    <string name="local_auth_hint">MVP acadêmico · conta local de demonstração. Seus planos ficam neste aparelho.</string>
+    <string name="retry">Tentar novamente</string>
+    <string name="sign_out">Sair da conta</string>
 </resources>

@@ -9,6 +9,6 @@ if (Test-Path -LiteralPath (Join-Path $localJdk 'bin/java.exe')) {
 $env:GRADLE_USER_HOME = Join-Path $projectRoot '.gradle-user-home'
 Push-Location $projectRoot
 try {
-    & .\gradlew.bat @Tasks --console=plain
+    & "$env:JAVA_HOME/bin/java.exe" -cp (Join-Path $projectRoot 'gradle/wrapper/gradle-wrapper.jar') org.gradle.wrapper.GradleWrapperMain @Tasks --console=plain
     exit $LASTEXITCODE
 } finally { Pop-Location }
