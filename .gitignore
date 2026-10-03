@@ -1,0 +1,15 @@
+.gradle/
+.gradle-user-home/
+.tooling/
+**/build/
+local.properties
+.idea/
+*.iml
+.kotlin/
+captures/
+*.jks
+*.keystore
+*.hprof
+.DS_Store
+Thumbs.db
+verification/local/
