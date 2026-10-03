@@ -8,6 +8,7 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Today
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,11 +21,20 @@ import androidx.navigation.compose.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.viewModelFactory
 import br.edu.fsa.planner.R
 import br.edu.fsa.planner.AppContainer
 import br.edu.fsa.planner.viewmodel.AuthViewModel
 import br.edu.fsa.planner.ui.screens.auth.LoginScreen
+import br.edu.fsa.planner.ui.screens.editor.EditorScreen
+import br.edu.fsa.planner.viewmodel.EditorViewModel
+import br.edu.fsa.planner.viewmodel.EditorResult
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.remember
+import java.time.LocalDate
 
 private data class PlannerTab(val route: String, val label: Int, val icon: ImageVector)
 private val tabs = listOf(
@@ -41,6 +51,8 @@ fun PlannerNavigation(container: AppContainer) {
     val login by auth.login.collectAsStateWithLifecycle()
     val navController = rememberNavController()
     val entry by navController.currentBackStackEntryAsState()
+    val snackbar = remember { SnackbarHostState() }
+    val context = LocalContext.current
     LaunchedEffect(session.ready, session.user) {
         if (session.ready) {
             val target = if (session.user == null) "login" else "daily"
@@ -49,7 +61,13 @@ fun PlannerNavigation(container: AppContainer) {
             }
         }
     }
-    Scaffold(bottomBar = {
+    Scaffold(snackbarHost = { SnackbarHost(snackbar) }, floatingActionButton = {
+        if (session.user != null && entry?.destination?.route in listOf("daily", "weekly", "monthly")) {
+            FloatingActionButton(onClick = { navController.navigate("editor?date=${LocalDate.now()}") }) {
+                Icon(Icons.Outlined.Add, stringResource(R.string.add_item))
+            }
+        }
+    }, bottomBar = {
         if (session.user != null && tabs.any { it.route == entry?.destination?.route }) NavigationBar {
             tabs.forEach { tab ->
                 NavigationBarItem(
@@ -75,6 +93,23 @@ fun PlannerNavigation(container: AppContainer) {
             composable("login") {
                 LoginScreen(login, auth::emailChanged, auth::passwordChanged, auth::togglePassword,
                     { auth.signIn() }, { auth.signIn(demo = true) })
+            }
+            composable("editor?itemId={itemId}&date={date}&type={type}", arguments = listOf(
+                navArgument("itemId") { type = NavType.LongType; defaultValue = 0L },
+                navArgument("date") { type = NavType.StringType; defaultValue = LocalDate.now().toString() },
+                navArgument("type") { type = NavType.StringType; defaultValue = "TASK" },
+            )) {
+                val editor: EditorViewModel = viewModel(factory = viewModelFactory {
+                    initializer { EditorViewModel(container.plannerRepository, createSavedStateHandle()) }
+                })
+                val state by editor.state.collectAsStateWithLifecycle()
+                LaunchedEffect(state.result) {
+                    state.result?.let { result ->
+                        navController.popBackStack()
+                        snackbar.showSnackbar(context.getString(if (result == EditorResult.SAVED) R.string.item_saved else R.string.item_deleted))
+                    }
+                }
+                EditorScreen(state, editor::update, editor::save, editor::delete, { navController.popBackStack() }, editor::load)
             }
             tabs.forEach { tab ->
                 composable(tab.route) {
