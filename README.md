@@ -4,6 +4,17 @@ Planner pessoal Android para um projeto acadêmico de Engenharia da Computação
 
 **Package:** `br.edu.fsa.planner` · **Android mínimo:** 8.0 / API 26 · **Versão:** 1.0.0.
 
+Repositório: [astrofl4me/cadency-app](https://github.com/astrofl4me/cadency-app). O nome interno do projeto continua `PlannerApp` e o aplicativo aparece como **Meu Planner** nesta versão.
+
+## Teste rápido no celular
+
+1. Neste computador, o APK já gerado fica em `app/build/outputs/apk/debug/app-debug.apk`. Transfira esse arquivo para um celular Android 8.0 ou superior.
+2. Abra o APK pelo gerenciador de arquivos. Se o Android solicitar, permita a instalação de aplicativos por essa fonte e conclua a instalação.
+3. Abra **Meu Planner** e toque em **Experimentar com conta demo**, ou entre com `demo@planner.app` e senha `123456`.
+4. Crie um plano, edite, conclua e confira no dia, semana e mês. Feche o aplicativo e abra novamente para conferir a persistência. Depois teste exclusão e logout.
+
+Os passos com Android Studio, emulador e depuração USB estão nas seções abaixo. O APK também pode ser obtido nos artifacts de uma execução bem-sucedida do GitHub Actions.
+
 ## Status atual
 
 As funcionalidades do MVP estão implementadas e o APK debug foi compilado. Os testes locais verificam regras, persistência e o fluxo de interface com Robolectric. A validação em um celular físico ou emulador inicializado permanece pendente; o computador de desenvolvimento não apresentou um dispositivo conectado e o emulador instalado não completou a inicialização.
@@ -86,6 +97,13 @@ Não há telas construídas em XML. Os XML existentes são manifest, resources e
 
 ## Abrir no Android Studio
 
+Para baixar o projeto em outro computador:
+
+```powershell
+git clone https://github.com/astrofl4me/cadency-app.git
+cd cadency-app
+```
+
 1. Instale uma versão estável do [Android Studio](https://developer.android.com/studio) compatível com AGP 8.13.2, ou mais recente.
 2. Escolha **Open** e selecione a pasta deste projeto, onde está `settings.gradle.kts`. Não abra apenas o módulo interno `app/`.
 3. Aguarde **Gradle Sync**. Em **Settings → Build, Execution, Deployment → Build Tools → Gradle**, selecione um JDK 17 compatível. Neste computador ele foi preparado em `.tooling/jdk`; o JDK compatível incluído no Studio também pode ser utilizado.
@@ -164,6 +182,19 @@ Com JDK e SDK configurados:
 
 O último comando exige um Android conectado e inicializado. Em Linux/macOS, use `./gradlew` em vez de `gradlew.bat` e configure o SDK local. Caso seja necessário, habilite a execução com `chmod +x gradlew`.
 
+### Build pelo GitHub Actions
+
+O workflow `.github/workflows/android.yml` executa build, testes locais, lint e compilação dos testes instrumentados em pushes e pull requests para `main`. Utiliza JDK 17 e prepara o SDK 36, sem credenciais externas.
+
+Para obter um APK gerado por ele:
+
+1. Abra [Actions → Android CI](https://github.com/astrofl4me/cadency-app/actions/workflows/android.yml).
+2. Selecione uma execução bem-sucedida.
+3. Em **Artifacts**, baixe `cadency-debug` estando conectado ao GitHub.
+4. Extraia o ZIP e instale `app-debug.apk` no celular.
+
+O artifact `cadency-reports` contém relatórios e capturas locais para revisão. Os artifacts ficam disponíveis por 14 dias; uma nova execução gera novos arquivos. O workflow compila os testes instrumentados, mas a execução deles exige um Android conectado.
+
 Para o caminho com acentos deste computador, prefira:
 
 ```powershell
@@ -202,4 +233,15 @@ O MVP tem somente uma conta local, tema claro e categorias fixas. Não possui si
 
 Próximos passos recomendados: concluir a aceitação em celular físico, revisar TalkBack e fonte ampliada, adicionar exportação/backup, paletas e preferências, depois autenticação real com dados por usuário e sincronização. Alarmes e recorrência podem ser adicionados em uma etapa específica.
 
-O repositório Git é local, com commits por etapa. Não foi criado remoto no GitHub. Build, SDK, cache, `local.properties`, arquivos de IDE e chaves não são versionados.
+O repositório Git preserva os commits por etapa e o commit inicial do GitHub. A branch principal é `main`, com remoto `origin` em `https://github.com/astrofl4me/cadency-app.git`. Build, SDK, cache, `local.properties`, arquivos de IDE e chaves não são versionados; APKs são entregues por artifacts, fora do histórico Git.
+
+Para enviar alterações futuras, na pasta raiz:
+
+```powershell
+git status
+git add .
+git commit -m "describe your change"
+git push
+```
+
+Confira os arquivos mostrados por `git status` antes de criar cada commit. `.gitignore` não remove arquivos que já estejam versionados; os arquivos gerados deste projeto foram conferidos e não fazem parte do histórico.
