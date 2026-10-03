@@ -5,6 +5,11 @@ $availableAvds = @(& $plannerEmulator -list-avds)
 if ($AvdName -notin $availableAvds) { throw "AVD $AvdName nao encontrado. Execute scripts/prepare-emulator.ps1." }
 $acceleration = @(& $plannerEmulator -accel-check 2>&1)
 if ($LASTEXITCODE -ne 0) {
+    $windowsFeature = Get-CimInstance Win32_OptionalFeature -Filter "Name='HypervisorPlatform'" -ErrorAction SilentlyContinue
+    $windowsComputer = Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue
+    if ($windowsFeature.InstallState -eq 1 -and $windowsComputer -and !$windowsComputer.HypervisorPresent) {
+        throw 'HypervisorPlatform ja esta habilitado, mas o hipervisor ainda esta inativo nesta sessao. Salve seu trabalho e reinicie o Windows pelo menu Iniciar > Energia > Reiniciar. Depois execute este comando novamente.'
+    }
     $acceleration | Write-Output
     throw 'Aceleracao indisponivel. Execute scripts/enable-emulator-acceleration.ps1 e reinicie o Windows se solicitado.'
 }
