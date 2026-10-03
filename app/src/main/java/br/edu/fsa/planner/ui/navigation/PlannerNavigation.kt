@@ -30,6 +30,11 @@ import br.edu.fsa.planner.ui.screens.auth.LoginScreen
 import br.edu.fsa.planner.ui.screens.editor.EditorScreen
 import br.edu.fsa.planner.viewmodel.EditorViewModel
 import br.edu.fsa.planner.viewmodel.EditorResult
+import br.edu.fsa.planner.viewmodel.PlannerViewModel
+import br.edu.fsa.planner.viewmodel.PlannerNotice
+import br.edu.fsa.planner.ui.screens.daily.DailyScreen
+import br.edu.fsa.planner.ui.screens.weekly.WeeklyScreen
+import br.edu.fsa.planner.domain.model.ItemType
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.compose.ui.platform.LocalContext
@@ -47,12 +52,26 @@ private val tabs = listOf(
 @Composable
 fun PlannerNavigation(container: AppContainer) {
     val auth: AuthViewModel = viewModel(factory = viewModelFactory { initializer { AuthViewModel(container.authRepository) } })
+    val planner: PlannerViewModel = viewModel(factory = viewModelFactory {
+        initializer { PlannerViewModel(container.plannerRepository, createSavedStateHandle()) }
+    })
     val session by auth.session.collectAsStateWithLifecycle()
     val login by auth.login.collectAsStateWithLifecycle()
     val navController = rememberNavController()
     val entry by navController.currentBackStackEntryAsState()
     val snackbar = remember { SnackbarHostState() }
     val context = LocalContext.current
+    fun addItem(date: LocalDate, type: ItemType) { navController.navigate("editor?date=$date&type=${type.name}") }
+    LaunchedEffect(planner) {
+        planner.notices.collect { notice ->
+            val message = when (notice) {
+                PlannerNotice.SAVED -> R.string.item_saved; PlannerNotice.DELETED -> R.string.item_deleted
+                PlannerNotice.COMPLETED -> R.string.item_completed; PlannerNotice.REOPENED -> R.string.item_reopened
+                PlannerNotice.NOTE_SAVED -> R.string.note_saved; PlannerNotice.ERROR -> R.string.storage_error
+            }
+            snackbar.showSnackbar(context.getString(message))
+        }
+    }
     LaunchedEffect(session.ready, session.user) {
         if (session.ready) {
             val target = if (session.user == null) "login" else "daily"
@@ -63,7 +82,7 @@ fun PlannerNavigation(container: AppContainer) {
     }
     Scaffold(snackbarHost = { SnackbarHost(snackbar) }, floatingActionButton = {
         if (session.user != null && entry?.destination?.route in listOf("daily", "weekly", "monthly")) {
-            FloatingActionButton(onClick = { navController.navigate("editor?date=${LocalDate.now()}") }) {
+            FloatingActionButton(onClick = { addItem(if (entry?.destination?.route == "weekly") planner.weekAddDate() else planner.currentDay(), ItemType.TASK) }) {
                 Icon(Icons.Outlined.Add, stringResource(R.string.add_item))
             }
         }
@@ -72,7 +91,7 @@ fun PlannerNavigation(container: AppContainer) {
             tabs.forEach { tab ->
                 NavigationBarItem(
                     selected = entry?.destination?.route == tab.route,
-                    onClick = { navController.navigate(tab.route) {
+                    onClick = { if (tab.route == "daily") planner.goToday(); navController.navigate(tab.route) {
                         popUpTo("daily") { saveState = true }
                         launchSingleTop = true
                         restoreState = true
@@ -106,14 +125,25 @@ fun PlannerNavigation(container: AppContainer) {
                 LaunchedEffect(state.result) {
                     state.result?.let { result ->
                         navController.popBackStack()
-                        snackbar.showSnackbar(context.getString(if (result == EditorResult.SAVED) R.string.item_saved else R.string.item_deleted))
+                        planner.editorFinished(result)
                     }
                 }
                 EditorScreen(state, editor::update, editor::save, editor::delete, { navController.popBackStack() }, editor::load)
             }
             tabs.forEach { tab ->
                 composable(tab.route) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    if (tab.route == "daily") {
+                        val state by planner.daily.collectAsStateWithLifecycle()
+                        DailyScreen(state, { planner.moveDay(-1) }, { planner.moveDay(1) }, planner::goToday,
+                            ::addItem, { navController.navigate("editor?itemId=${it.id}") }, planner::toggle,
+                            planner::setMood, planner::saveDailyNote, planner::retryData)
+                    } else if (tab.route == "weekly") {
+                        val state by planner.weekly.collectAsStateWithLifecycle()
+                        WeeklyScreen(state, { planner.moveWeek(-1) }, { planner.moveWeek(1) }, planner::goCurrentWeek,
+                            ::addItem, { navController.navigate("editor?itemId=${it.id}") }, planner::toggle,
+                            { planner.selectDay(it); navController.navigate("daily") { popUpTo("daily"); launchSingleTop = true } },
+                            planner::saveWeeklyNote, planner::retryData)
+                    } else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         if (tab.route == "settings") Button(onClick = auth::signOut) { Text(stringResource(R.string.sign_out)) }
                         else Text(stringResource(tab.label), style = MaterialTheme.typography.headlineLarge)
                     }
