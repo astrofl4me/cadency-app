@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.Clock
 import java.time.LocalDate
+import java.time.YearMonth
 
 enum class PlannerNotice { SAVED, DELETED, COMPLETED, REOPENED, NOTE_SAVED, ERROR }
 data class DailyUiState(
@@ -24,6 +25,10 @@ data class WeeklyUiState(
     val items: List<PlannerItem> = emptyList(), val note: PlannerNote = PlannerNote(""),
     val loading: Boolean = true, val hasError: Boolean = false,
 )
+data class MonthlyUiState(
+    val month: YearMonth = YearMonth.now(), val selectedDate: LocalDate = LocalDate.now(), val today: LocalDate = LocalDate.now(),
+    val items: List<PlannerItem> = emptyList(), val loading: Boolean = true, val hasError: Boolean = false,
+)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PlannerViewModel(private val repository: PlannerRepository, private val savedState: SavedStateHandle,
@@ -32,6 +37,8 @@ class PlannerViewModel(private val repository: PlannerRepository, private val sa
     private val retry = MutableStateFlow(0)
     private val day = savedState.getStateFlow("selected_day", today.value.toString())
     private val week = savedState.getStateFlow("selected_week", PlannerDates.week(today.value).start.toString())
+    private val month = savedState.getStateFlow("selected_month", YearMonth.from(today.value).toString())
+    private val calendarDay = savedState.getStateFlow("calendar_day", today.value.toString())
     private val noticeChannel = Channel<PlannerNotice>(Channel.BUFFERED)
     val notices = noticeChannel.receiveAsFlow()
 
@@ -51,6 +58,15 @@ class PlannerViewModel(private val repository: PlannerRepository, private val sa
                 .catch { emit(WeeklyUiState(interval, current, loading = false, hasError = true)) }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WeeklyUiState(PlannerDates.week(today.value), today.value))
 
+    val monthly = combine(month, today, retry) { value, current, _ -> YearMonth.parse(value) to current }
+        .flatMapLatest { (value, current) ->
+            val grid = PlannerDates.monthGrid(value)
+            combine(repository.observeRange(DateInterval(grid.first(), grid.last())), calendarDay) { items, selected ->
+                MonthlyUiState(value, LocalDate.parse(selected), current, items, loading = false)
+            }.onStart { emit(MonthlyUiState(value, LocalDate.parse(calendarDay.value), current)) }
+                .catch { emit(MonthlyUiState(value, LocalDate.parse(calendarDay.value), current, loading = false, hasError = true)) }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MonthlyUiState(YearMonth.from(today.value), today.value, today.value))
+
     fun refreshToday() { today.value = LocalDate.now(clock) }
     fun retryData() { retry.update { it + 1 } }
     fun goToday() { refreshToday(); selectDay(today.value) }
@@ -60,6 +76,18 @@ class PlannerViewModel(private val repository: PlannerRepository, private val sa
     fun moveWeek(amount: Long) { savedState["selected_week"] = LocalDate.parse(week.value).plusWeeks(amount).toString() }
     fun goCurrentWeek() { refreshToday(); savedState["selected_week"] = PlannerDates.week(today.value).start.toString() }
     fun weekAddDate(): LocalDate = PlannerDates.week(LocalDate.parse(week.value)).let { if (today.value in it) today.value else it.start }
+    fun moveMonth(amount: Long) {
+        val target = YearMonth.parse(month.value).plusMonths(amount)
+        val selected = LocalDate.parse(calendarDay.value)
+        savedState["calendar_day"] = target.atDay(minOf(selected.dayOfMonth, target.lengthOfMonth())).toString()
+        savedState["selected_month"] = target.toString()
+    }
+    fun goCurrentMonth() { refreshToday(); selectCalendarDay(today.value) }
+    fun selectCalendarDay(date: LocalDate) {
+        savedState["calendar_day"] = date.toString()
+        savedState["selected_month"] = YearMonth.from(date).toString()
+    }
+    fun monthAddDate(): LocalDate = LocalDate.parse(calendarDay.value)
 
     fun toggle(item: PlannerItem) { mutate(if (item.isCompleted) PlannerNotice.REOPENED else PlannerNotice.COMPLETED) {
         repository.setCompleted(item, !item.isCompleted)

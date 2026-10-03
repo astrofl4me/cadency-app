@@ -3,6 +3,7 @@ package br.edu.fsa.planner.ui.navigation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.DateRange
@@ -34,6 +35,14 @@ import br.edu.fsa.planner.viewmodel.PlannerViewModel
 import br.edu.fsa.planner.viewmodel.PlannerNotice
 import br.edu.fsa.planner.ui.screens.daily.DailyScreen
 import br.edu.fsa.planner.ui.screens.weekly.WeeklyScreen
+import br.edu.fsa.planner.ui.screens.monthly.MonthlyScreen
+import br.edu.fsa.planner.ui.screens.settings.SettingsScreen
+import br.edu.fsa.planner.ui.screens.auth.SessionCheckScreen
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import br.edu.fsa.planner.domain.model.ItemType
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -61,6 +70,12 @@ fun PlannerNavigation(container: AppContainer) {
     val entry by navController.currentBackStackEntryAsState()
     val snackbar = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner, planner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (isActive) { planner.refreshToday(); delay(60_000) }
+        }
+    }
     fun addItem(date: LocalDate, type: ItemType) { navController.navigate("editor?date=$date&type=${type.name}") }
     LaunchedEffect(planner) {
         planner.notices.collect { notice ->
@@ -82,7 +97,9 @@ fun PlannerNavigation(container: AppContainer) {
     }
     Scaffold(snackbarHost = { SnackbarHost(snackbar) }, floatingActionButton = {
         if (session.user != null && entry?.destination?.route in listOf("daily", "weekly", "monthly")) {
-            FloatingActionButton(onClick = { addItem(if (entry?.destination?.route == "weekly") planner.weekAddDate() else planner.currentDay(), ItemType.TASK) }) {
+            FloatingActionButton(onClick = { addItem(when (entry?.destination?.route) {
+                "weekly" -> planner.weekAddDate(); "monthly" -> planner.monthAddDate(); else -> planner.currentDay()
+            }, ItemType.TASK) }) {
                 Icon(Icons.Outlined.Add, stringResource(R.string.add_item))
             }
         }
@@ -102,12 +119,9 @@ fun PlannerNavigation(container: AppContainer) {
             }
         }
     }) { padding ->
-        NavHost(navController, startDestination = "splash", modifier = Modifier.padding(padding)) {
+        NavHost(navController, startDestination = "splash", modifier = Modifier.padding(padding).consumeWindowInsets(padding)) {
             composable("splash") {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    if (session.hasError) Button(onClick = auth::retrySession) { Text(stringResource(R.string.retry)) }
-                    else CircularProgressIndicator()
-                }
+                SessionCheckScreen(session.hasError, auth::retrySession)
             }
             composable("login") {
                 LoginScreen(login, auth::emailChanged, auth::passwordChanged, auth::togglePassword,
@@ -143,9 +157,14 @@ fun PlannerNavigation(container: AppContainer) {
                             ::addItem, { navController.navigate("editor?itemId=${it.id}") }, planner::toggle,
                             { planner.selectDay(it); navController.navigate("daily") { popUpTo("daily"); launchSingleTop = true } },
                             planner::saveWeeklyNote, planner::retryData)
-                    } else Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        if (tab.route == "settings") Button(onClick = auth::signOut) { Text(stringResource(R.string.sign_out)) }
-                        else Text(stringResource(tab.label), style = MaterialTheme.typography.headlineLarge)
+                    } else if (tab.route == "monthly") {
+                        val state by planner.monthly.collectAsStateWithLifecycle()
+                        MonthlyScreen(state, { planner.moveMonth(-1) }, { planner.moveMonth(1) }, planner::goCurrentMonth,
+                            planner::selectCalendarDay,
+                            { planner.selectDay(it); navController.navigate("daily") { popUpTo("daily"); launchSingleTop = true } },
+                            ::addItem, { navController.navigate("editor?itemId=${it.id}") }, planner::toggle, planner::retryData)
+                    } else {
+                        session.user?.let { SettingsScreen(it, login.busy, login.error != null, auth::signOut) }
                     }
                 }
             }

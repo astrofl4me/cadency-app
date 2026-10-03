@@ -6,7 +6,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.*
@@ -32,7 +32,7 @@ fun LoginScreen(state: LoginUiState, onEmail: (String) -> Unit, onPassword: (Str
         Column(Modifier.widthIn(max = D.ContentWidth).fillMaxWidth().verticalScroll(rememberScrollState())
             .padding(D.Page), verticalArrangement = Arrangement.spacedBy(D.Large)) {
             Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.primaryContainer) {
-                Icon(Icons.Outlined.MenuBook, contentDescription = null, modifier = Modifier.padding(D.Large).size(D.Section))
+                Icon(Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, modifier = Modifier.padding(D.Large).size(D.Section))
             }
             Spacer(Modifier.height(D.Small))
             Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)

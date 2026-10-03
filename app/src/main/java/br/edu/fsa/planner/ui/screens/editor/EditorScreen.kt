@@ -34,6 +34,9 @@ fun EditorScreen(state: EditorUiState, onUpdate: ((PlannerForm) -> PlannerForm) 
     var showDate by rememberSaveable { mutableStateOf(false) }
     var showDetails by rememberSaveable { mutableStateOf(state.isEditing) }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(state.errors) {
+        if (state.errors.description || state.errors.startTime || state.errors.endTime || state.errors.timeOrder) showDetails = true
+    }
     val form = state.form
     val date = runCatching { LocalDate.parse(form.date) }.getOrDefault(LocalDate.now())
     Scaffold(topBar = {
