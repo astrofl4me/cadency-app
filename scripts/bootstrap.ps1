@@ -25,8 +25,9 @@ $env:ANDROID_HOME = $sdkRoot
 if (!(Test-Path -LiteralPath (Join-Path $sdkRoot 'cmdline-tools/latest/bin/sdkmanager.bat'))) {
     Get-Download 'https://dl.google.com/android/repository/commandlinetools-win-13114758_latest.zip' (Join-Path $toolingRoot 'sdk-tools.zip')
     Expand-Archive -LiteralPath (Join-Path $toolingRoot 'sdk-tools.zip') -DestinationPath (Join-Path $toolingRoot 'sdk-extract') -Force
-    New-Item -ItemType Directory -Force -Path (Join-Path $sdkRoot 'cmdline-tools') | Out-Null
-    Copy-Item -LiteralPath (Join-Path $toolingRoot 'sdk-extract/cmdline-tools') -Destination (Join-Path $sdkRoot 'cmdline-tools/latest') -Recurse -Force
+    $sdkToolsDestination = Join-Path $sdkRoot 'cmdline-tools/latest'
+    New-Item -ItemType Directory -Force -Path $sdkToolsDestination | Out-Null
+    Copy-Item -Path (Join-Path $toolingRoot 'sdk-extract/cmdline-tools/*') -Destination $sdkToolsDestination -Recurse -Force
 }
 $sdkManager = Join-Path $sdkRoot 'cmdline-tools/latest/bin/sdkmanager.bat'
 1..30 | ForEach-Object { 'y' } | & $sdkManager "--sdk_root=$sdkRoot" --licenses
