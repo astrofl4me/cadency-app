@@ -1,5 +1,6 @@
 package br.edu.fsa.planner.ui.screens.weekly
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,81 +12,97 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.testTag
 import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.*
 import br.edu.fsa.planner.ui.components.*
 import br.edu.fsa.planner.ui.theme.PlannerDimens as D
+import br.edu.fsa.planner.ui.theme.PlannerPaper as Paper
 import br.edu.fsa.planner.viewmodel.WeeklyUiState
+import java.time.DayOfWeek
 import java.time.LocalDate
 
 @Composable
 fun WeeklyScreen(state: WeeklyUiState, onPrevious: () -> Unit, onNext: () -> Unit, onCurrent: () -> Unit,
                  onAdd: (LocalDate, ItemType) -> Unit, onEdit: (PlannerItem) -> Unit, onToggle: (PlannerItem) -> Unit,
-                 onOpenDay: (LocalDate) -> Unit, onNote: (String, Boolean) -> Unit, onRetry: () -> Unit) {
-    var editing by rememberSaveable(state.interval.start.toString()) { mutableStateOf<String?>(null) }
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        LazyColumn(Modifier.widthIn(max = D.ContentWidth).fillMaxSize(),
-            contentPadding = PaddingValues(start = D.Page, end = D.Page, top = D.Page, bottom = D.Hero + D.Page)) {
+                 onOpenDay: (LocalDate) -> Unit, onNote: (String, Boolean) -> Unit,
+                 onSaveHabit: (WeeklyHabit) -> Unit, onToggleHabit: (WeeklyHabit, DayOfWeek) -> Unit,
+                 onDeleteHabit: (WeeklyHabit) -> Unit, onRetry: () -> Unit) {
+    var editing by rememberSaveable(state.interval.start.toString()) { mutableStateOf<Boolean?>(null) }
+    val priorities = state.items.filter { it.type == ItemType.PRIORITY || it.priority == Priority.HIGH }
+    val tasks = state.items.filter { it.type != ItemType.EVENT && it !in priorities }
+    val addDate = if (state.today in state.interval) state.today else state.interval.start
+    Box(Modifier.fillMaxSize().background(Paper.Background), contentAlignment = Alignment.TopCenter) {
+        LazyColumn(Modifier.widthIn(max = D.PaperContentWidth).fillMaxSize().testTag("planner-paper-page"),
+            contentPadding = PaddingValues(start = D.Page, end = D.Page, top = D.Page, bottom = D.Hero + D.Page),
+            verticalArrangement = Arrangement.spacedBy(D.Page)) {
             item {
-                PlannerHeader(stringResource(R.string.weekly_eyebrow), stringResource(R.string.weekly_title),
-                    stringResource(R.string.week_interval, state.interval.start.shortLabel(), state.interval.endInclusive.shortLabel(), state.interval.endInclusive.year.toString()))
+                PaperPageHeader(stringResource(R.string.weekly_eyebrow), stringResource(R.string.paper_weekly_title),
+                    stringResource(R.string.paper_week_number, state.interval.start.get(java.time.temporal.WeekFields.ISO.weekOfWeekBasedYear())))
+                Spacer(Modifier.height(D.Small))
+                Text(stringResource(R.string.week_interval, state.interval.start.shortLabel(), state.interval.endInclusive.shortLabel(),
+                    state.interval.endInclusive.year.toString()), style = Paper.Caption, color = Paper.Muted)
                 DateNavigator(stringResource(R.string.previous_week), stringResource(R.string.next_week), stringResource(R.string.current_week),
                     onPrevious, onNext, onCurrent)
-                HorizontalDivider()
-                Spacer(Modifier.height(D.Page))
             }
             if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             else if (state.hasError) item { DataError(onRetry) }
             else {
                 item {
-                    Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = MaterialTheme.shapes.large,
-                        modifier = Modifier.fillMaxWidth().clickable { editing = "highlight" }) {
-                        Column(Modifier.padding(D.Large), verticalArrangement = Arrangement.spacedBy(D.Small)) {
-                            Text(stringResource(R.string.week_highlight), style = MaterialTheme.typography.titleSmall)
-                            Text(state.note.highlight.ifBlank { stringResource(R.string.week_highlight_hint) }, style = MaterialTheme.typography.bodyMedium)
-                            Text(stringResource(R.string.edit_highlight), style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.secondary)
-                        }
-                    }
-                    Spacer(Modifier.height(D.Page))
-                }
-                state.interval.days.forEach { date ->
-                    val dayItems = PlannerDates.itemsIn(state.items, DateInterval(date, date))
-                    item(key = date.toString()) {
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Surface(color = if (date == state.today) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                                shape = MaterialTheme.shapes.medium, modifier = Modifier.weight(1f).clickable(
-                                    onClickLabel = stringResource(R.string.open_daily), onClick = { onOpenDay(date) })) {
-                                Row(Modifier.padding(D.Small), verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(D.Medium)) {
-                                    Text(date.dayOfMonth.toString(), style = MaterialTheme.typography.headlineMedium)
-                                    Column {
-                                        Text(date.weekdayLabel(), style = MaterialTheme.typography.titleSmall)
-                                        Text(if (date == state.today) stringResource(R.string.today_label) else date.shortLabel(),
-                                            style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                }
-                            }
-                            IconButton(onClick = { onAdd(date, ItemType.TASK) }) {
-                                Icon(Icons.Outlined.Add, stringResource(R.string.add_day, date.shortLabel()))
+                    PaperColumns(primary = {
+                        Column(verticalArrangement = Arrangement.spacedBy(D.Small)) {
+                            state.interval.days.forEach { date ->
+                                WeeklyDay(date, date == state.today, state.items.filter { it.date == date },
+                                    { onOpenDay(date) }, { onAdd(date, ItemType.TASK) }, onToggle, onEdit)
                             }
                         }
-                        if (dayItems.isEmpty()) EmptyState(stringResource(R.string.week_day_empty))
-                        else dayItems.forEach { item -> PlannerItemRow(item, { onToggle(item) }, { onEdit(item) }, compact = true) }
-                        Spacer(Modifier.height(D.Page))
-                        HorizontalDivider()
+                    }, secondary = {
+                        PaperItemSection(stringResource(R.string.priorities), priorities, shaded = true, minimumRows = 4,
+                            emptyMessage = stringResource(R.string.priorities_empty),
+                            onAdd = { onAdd(addDate, ItemType.PRIORITY) }, onToggle = onToggle, onEdit = onEdit)
                         Spacer(Modifier.height(D.Large))
-                    }
+                        PaperItemSection(stringResource(R.string.paper_week_todo), tasks, minimumRows = 5,
+                            emptyMessage = stringResource(R.string.paper_add_here),
+                            onAdd = { onAdd(addDate, ItemType.TASK) }, onToggle = onToggle, onEdit = onEdit)
+                        Spacer(Modifier.height(D.Large))
+                        PaperHabitTracker(state.interval.start, state.habits, onSaveHabit, onToggleHabit, onDeleteHabit)
+                    })
                 }
                 item {
-                    SectionTitle(stringResource(R.string.week_notes))
-                    Text(state.note.text.ifBlank { stringResource(R.string.week_notes_hint) }, style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    TextButton(onClick = { editing = "text" }) { Text(stringResource(R.string.edit_note)) }
+                    PaperNoteArea(stringResource(R.string.week_highlight), state.note.highlight,
+                        stringResource(R.string.week_highlight_hint), { editing = true }, ruled = false)
+                }
+                item {
+                    PaperNoteArea(stringResource(R.string.week_notes), state.note.text,
+                        stringResource(R.string.week_notes_hint), { editing = false }, shaded = true, ruled = false)
                 }
             }
         }
     }
-    editing?.let { field -> NoteDialog(stringResource(if (field == "highlight") R.string.week_highlight else R.string.week_notes),
-        if (field == "highlight") state.note.highlight else state.note.text, { editing = null }, { onNote(it, field == "highlight") }) }
+    editing?.let { highlight -> NoteDialog(stringResource(if (highlight) R.string.week_highlight else R.string.week_notes),
+        if (highlight) state.note.highlight else state.note.text, { editing = null }, { onNote(it, highlight) }) }
+}
+
+@Composable
+private fun WeeklyDay(date: LocalDate, today: Boolean, items: List<PlannerItem>, onOpen: () -> Unit,
+                      onAdd: () -> Unit, onToggle: (PlannerItem) -> Unit, onEdit: (PlannerItem) -> Unit) {
+    Row(Modifier.fillMaxWidth().heightIn(min = D.PaperDayHeight).background(Paper.Panel, Paper.Shape)) {
+        Column(Modifier.width(D.PaperWeekdayWidth)
+            .clickable(onClickLabel = stringResource(R.string.open_daily), onClick = onOpen).padding(D.Medium),
+            verticalArrangement = Arrangement.spacedBy(D.Tiny)) {
+            Text(date.weekdayLabel().removeSuffix("-feira"), style = Paper.Label, color = Paper.Ink)
+            Text(date.dayOfMonth.toString(), style = Paper.Title, color = Paper.Ink)
+            if (today) Text(stringResource(R.string.today_label), style = Paper.Caption, color = MaterialTheme.colorScheme.primary)
+        }
+        Column(Modifier.weight(1f).padding(end = D.Small, bottom = D.Small)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                HorizontalDivider(Modifier.weight(1f), color = Paper.Rule)
+                IconButton(onClick = onAdd) { Icon(Icons.Outlined.Add, stringResource(R.string.add_day, date.shortLabel()),
+                    tint = Paper.Muted, modifier = Modifier.size(D.Icon)) }
+            }
+            if (items.isEmpty()) Text(stringResource(R.string.week_day_empty), style = Paper.Caption, color = Paper.Muted,
+                modifier = Modifier.fillMaxWidth().heightIn(min = D.Touch).clickable(onClick = onAdd).padding(top = D.Small))
+            items.forEach { item -> PaperItemRow(item, { onToggle(item) }, { onEdit(item) }) }
+        }
+    }
 }

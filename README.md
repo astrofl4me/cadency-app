@@ -17,7 +17,7 @@ Os passos com Android Studio, emulador e depuração USB estão nas seções aba
 
 ## Status atual
 
-As funcionalidades do MVP estão implementadas e o APK debug foi compilado. Os testes locais verificam regras, persistência e o fluxo de interface com Robolectric. A validação em um celular físico ou emulador inicializado permanece pendente; o computador de desenvolvimento não apresentou um dispositivo conectado e o emulador instalado não completou a inicialização.
+As funcionalidades do MVP estão implementadas e o APK debug foi compilado. Em 21/10/2026, as páginas diária e semanal receberam o layout baseado nos modelos de planner enviados para o projeto. Os testes locais verificam regras, persistência, migração do banco e interface em celular e tablet. O fluxo instrumentado também passou no emulador Android 15, incluindo tarefas, água, gratidão, hábitos, restauração e logout. A abertura de anotações e o logout foram conferidos adicionalmente por toques via ADB/UI Automator. A aceitação em celular físico continua sendo uma etapa recomendada.
 
 Os resultados detalhados ficam em [verification/VALIDACAO.md](verification/VALIDACAO.md). Os relatórios gerados pelo Gradle ficam em `app/build/reports/`.
 
@@ -27,13 +27,21 @@ Os resultados detalhados ficam em [verification/VALIDACAO.md](verification/VALID
 - Navegação Compose com Hoje, Semana, Mês e Perfil em uma única Activity.
 - Criar, editar, concluir, reabrir e excluir tarefas ou compromissos.
 - Data, título, descrição, horários opcionais, tipo, prioridade e categoria.
-- Visão diária com prioridades, checklist, planos pendentes de amanhã, humor e notas.
-- Visão semanal de segunda a domingo, com seções verticais, intenção e notas da semana.
+- Visão diária com prioridades, checklist, humor, controle de água, autocuidado, gratidão, anotações e planos de amanhã.
+- Visão semanal de segunda a domingo, prioridades, lista de tarefas, hábitos com marcações por dia, intenção e notas da semana.
 - Calendário mensal de domingo a sábado, seleção de datas, indicadores de categorias e abertura da visão diária.
 - Navegação entre dias, semanas e meses, com retorno ao período atual.
-- Persistência Room reativa; notas e humor também são dados locais reais.
+- Persistência Room reativa; notas, humor, água, gratidão e hábitos também são dados locais reais. Migração de v1 para v2 preserva os registros anteriores.
 - Estados de carregamento, listas vazias, erros e feedback discreto por snackbar.
-- Tema claro com papel quente, sálvia, pêssego e lavanda; áreas de toque e descrições acessíveis.
+- Páginas diária e semanal com papel claro, blocos cinza, linhas finas e títulos serifados; áreas de toque e descrições acessíveis.
+
+### Layout baseado na referência
+
+Em áreas úteis a partir de 600 dp, as páginas usam duas colunas, como os modelos: agenda à esquerda e seções auxiliares à direita. Em celulares, as seções são empilhadas e a página rola verticalmente. A tabela de hábitos permite rolagem horizontal quando necessário para preservar o tamanho dos alvos de toque.
+
+As fontes são provisórias. `PlannerFonts` e `PlannerPaper`, em `ui/theme/PlannerTheme.kt`, centralizam famílias, estilos, cores e formas. As fontes definitivas poderão ser adicionadas em `app/src/main/res/font/` e associadas ali, sem refazer as telas.
+
+O controle de água registra de zero a oito copos por data. Hábitos são criados, editados, marcados e excluídos por semana; não se repetem automaticamente. Atividades/anotações, autocuidado e gratidão são campos independentes. As capturas e o registro desta etapa ficam em [verification/REFERENCIA_VISUAL.md](verification/REFERENCIA_VISUAL.md).
 
 ## Stack
 
@@ -239,7 +247,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1 -Tasks ass
 
 Os testes cobrem calendário, intervalos semanais, filtros, validação, queries reais do Room, CRUD reativo, banco reaberto, notas/humor e sessão/logout. O teste de interface local fica em `testDebug`, pois utiliza a Activity disponibilizada por `ui-test-manifest` nessa variante. O teste instrumentado percorre o fluxo essencial e recria a Activity para verificar restauração.
 
-Na validação final, passaram **21 testes em debug e 20 em release**. `assembleDebug`, `test`, `lintDebug` e `assembleDebugAndroidTest` concluíram com sucesso. O lint não apresentou erros; seus 14 avisos indicam versões mais recentes de dependências. A execução de `connectedDebugAndroidTest` ainda exige um dispositivo disponível.
+Na validação de 21/10/2026, passaram **26 testes em debug e 24 em release**. O lint não apresentou erros; seus 14 avisos indicam versões mais recentes de dependências. Os detalhes da execução no emulador ficam em [verification/REFERENCIA_VISUAL.md](verification/REFERENCIA_VISUAL.md).
 
 ### Roteiro de aceitação no aparelho
 
@@ -248,7 +256,7 @@ Entre com a conta demo; crie um plano; confira a data no dia, semana e mês; edi
 ## Decisões de projeto
 
 - **Compose:** permite construir telas declarativas e componentes reutilizáveis, acompanhando o estado observado sem telas XML ou várias Activities.
-- **Room:** valida consultas em compilação, mantém dados estruturados no aparelho e emite Flows quando eles mudam. O schema inicial é versionado; alterações futuras deverão incluir migrations, preservando os dados existentes.
+- **Room:** valida consultas em compilação, mantém dados estruturados no aparelho e emite Flows quando eles mudam. Os schemas v1 e v2 são versionados; a migration 1→2 adiciona os campos do diário e a tabela de hábitos sem apagar os dados existentes.
 - **DataStore:** mantém o pequeno estado de sessão de maneira assíncrona. Tarefas, humor e notas ficam no Room.
 - **Autenticação local:** permite estudar e executar o MVP offline sem configurar serviços externos. `AuthRepository` define a sessão e as operações de login/logout, isolando as credenciais da interface.
 - **Firebase no futuro:** implemente `AuthRepository` com Firebase Authentication e forneça a implementação pelo `AppContainer`. ViewModel e UI continuam consumindo o mesmo contrato. Contas reais também exigirão vincular os dados do planner ao ID do usuário e definir a estratégia de sincronização.

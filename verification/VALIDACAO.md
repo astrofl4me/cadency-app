@@ -1,5 +1,7 @@
 # Registro de validação — PlannerApp
 
+**Atualização de 21/10/2026:** o redesenho diário/semanal, a migração Room v2 e os testes adicionais estão registrados em [REFERENCIA_VISUAL.md](REFERENCIA_VISUAL.md). O registro abaixo preserva os resultados da primeira entrega.
+
 Verificação realizada em **3 de outubro de 2026**, no Windows, com JDK 17 e SDK Android 36 preparados localmente. O projeto usa o package `br.edu.fsa.planner`, versão 1.0.0, e requer Android 8.0 / API 26 ou superior.
 
 ## Resultado final

@@ -17,12 +17,14 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.time.Clock
+import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
 import java.time.ZoneOffset
 import java.util.UUID
+import org.json.JSONObject
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -109,5 +111,91 @@ class PlannerPersistenceTest {
         val note = repository.observeNote(key).first()
         assertEquals("Uma boa ideia", note.text)
         assertEquals(Mood.GOOD, note.mood)
+    }
+
+    @Test fun dailyJournalFieldsSurviveReopenAndRemainIsolatedByDate() = runBlocking {
+        val key = "day:$date"
+        coroutineScope {
+            launch { repository.updateNote(key) { it.copy(waterGlasses = 5) } }
+            launch { repository.updateNote(key) { it.copy(gratitude = "Família", selfCare = "Caminhar") } }
+            launch { repository.updateNote(key) { it.copy(text = "Dia tranquilo", mood = Mood.GOOD) } }
+        }
+        database.close()
+        database = Room.databaseBuilder(context, PlannerDatabase::class.java, name).build()
+        repository = PlannerRepository(database.plannerDao(), clock)
+        val note = repository.observeNote(key).first()
+        assertEquals(5, note.waterGlasses)
+        assertEquals("Família", note.gratitude)
+        assertEquals("Caminhar", note.selfCare)
+        assertEquals("Dia tranquilo", note.text)
+        assertEquals(0, repository.observeNote("day:${date.plusDays(1)}").first().waterGlasses)
+    }
+
+    @Test fun habitsKeepIndependentDayMarksAndWeeksAfterReopen() = runBlocking {
+        val week = PlannerDates.week(date).start
+        val id = repository.saveHabit(WeeklyHabit(weekStart = date, title = "  Ler  "))
+        coroutineScope {
+            launch { repository.toggleHabit(id, DayOfWeek.MONDAY) }
+            launch { repository.toggleHabit(id, DayOfWeek.SUNDAY) }
+        }
+        repository.toggleHabit(id, DayOfWeek.MONDAY)
+        assertTrue(repository.observeHabits(week.plusWeeks(1)).first().isEmpty())
+        database.close()
+        database = Room.databaseBuilder(context, PlannerDatabase::class.java, name).build()
+        repository = PlannerRepository(database.plannerDao(), clock)
+        val habit = repository.observeHabits(week).first().single()
+        assertEquals("Ler", habit.title)
+        assertEquals(setOf(DayOfWeek.SUNDAY), habit.completedDays)
+        repository.saveHabit(habit.copy(title = "Ler um capítulo"))
+        assertEquals(setOf(DayOfWeek.SUNDAY), repository.observeHabits(week).first().single().completedDays)
+        repository.deleteHabit(id)
+        assertTrue(repository.observeHabits(week).first().isEmpty())
+    }
+
+    @Test fun habitNameMustHaveContentAndRespectLengthLimit() = runBlocking {
+        for (title in listOf("   ", "x".repeat(PlannerJournal.HabitTitleLimit + 1))) {
+            try {
+                repository.saveHabit(WeeklyHabit(weekStart = date, title = title))
+                fail("Invalid habit accepted")
+            } catch (_: IllegalArgumentException) { }
+        }
+        assertTrue(repository.observeHabits(PlannerDates.week(date).start).first().isEmpty())
+    }
+
+    @Test fun migrationFromPublishedVersionPreservesPlansNotesAndMood() = runBlocking {
+        database.close()
+        val schema = javaClass.getResourceAsStream("/br.edu.fsa.planner.data.local.database.PlannerDatabase/1.json")!!
+            .bufferedReader().use { JSONObject(it.readText()).getJSONObject("database") }
+        context.openOrCreateDatabase(name, Context.MODE_PRIVATE, null).use { old ->
+            val entities = schema.getJSONArray("entities")
+            for (index in 0 until entities.length()) {
+                val entity = entities.getJSONObject(index)
+                val table = entity.getString("tableName")
+                old.execSQL(entity.getString("createSql").replace("\${TABLE_NAME}", table))
+                val indices = entity.optJSONArray("indices")
+                if (indices != null) for (i in 0 until indices.length()) {
+                    old.execSQL(indices.getJSONObject(i).getString("createSql").replace("\${TABLE_NAME}", table))
+                }
+            }
+            val queries = schema.getJSONArray("setupQueries")
+            for (index in 0 until queries.length()) old.execSQL(queries.getString(index))
+            old.execSQL("INSERT INTO planner_notes VALUES (?, 'Anotação anterior', 'Intenção anterior', 'GOOD')", arrayOf("day:$date"))
+            old.execSQL("INSERT INTO planner_items VALUES (1, 'Plano anterior', '', ?, NULL, NULL, 'TASK', 'MEDIUM', 'PERSONAL', 0, 1000, 1000)",
+                arrayOf(date.toEpochDay()))
+            old.version = 1
+        }
+        database = Room.databaseBuilder(context, PlannerDatabase::class.java, name)
+            .addMigrations(PlannerDatabase.Migration1To2).build()
+        repository = PlannerRepository(database.plannerDao(), clock)
+        assertEquals("Plano anterior", repository.observeDay(date).first().single().title)
+        val note = repository.observeNote("day:$date").first()
+        assertEquals("Anotação anterior", note.text)
+        assertEquals("Intenção anterior", note.highlight)
+        assertEquals(Mood.GOOD, note.mood)
+        assertEquals(0, note.waterGlasses)
+        assertEquals("", note.gratitude)
+        assertEquals("", note.selfCare)
+        val id = repository.saveHabit(WeeklyHabit(weekStart = date, title = "Alongar"))
+        assertEquals(id, repository.observeHabits(PlannerDates.week(date).start).first().single().id)
     }
 }

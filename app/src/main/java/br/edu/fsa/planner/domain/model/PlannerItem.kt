@@ -23,4 +23,7 @@ data class PlannerItem(
     val updatedAt: Long = 0,
 )
 
-data class PlannerNote(val key: String, val text: String = "", val highlight: String = "", val mood: Mood? = null)
+data class PlannerNote(
+    val key: String, val text: String = "", val highlight: String = "", val mood: Mood? = null,
+    val waterGlasses: Int = 0, val gratitude: String = "", val selfCare: String = "",
+)

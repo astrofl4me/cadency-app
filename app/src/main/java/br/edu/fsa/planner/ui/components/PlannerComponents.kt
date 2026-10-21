@@ -15,6 +15,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.testTag
 import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.*
 import br.edu.fsa.planner.ui.theme.PlannerDimens as D
@@ -37,7 +38,8 @@ fun DateNavigator(previousDescription: String, nextDescription: String, currentL
         IconButton(onClick = onPrevious, modifier = Modifier.size(D.Touch)) {
             Icon(Icons.AutoMirrored.Outlined.KeyboardArrowLeft, previousDescription)
         }
-        TextButton(onClick = onCurrent, modifier = Modifier.heightIn(min = D.Touch)) { Text(currentLabel) }
+        TextButton(onClick = onCurrent, modifier = Modifier.heightIn(min = D.Touch),
+            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)) { Text(currentLabel) }
         IconButton(onClick = onNext, modifier = Modifier.size(D.Touch)) {
             Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, nextDescription)
         }
@@ -106,7 +108,7 @@ fun MoodSelector(selected: Mood?, onSelect: (Mood) -> Unit) {
 fun NoteDialog(title: String, initialText: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
     var text by rememberSaveable { mutableStateOf(initialText) }
     AlertDialog(onDismissRequest = onDismiss, title = { Text(title) }, text = {
-        OutlinedTextField(text, { if (it.length <= 2000) text = it }, modifier = Modifier.fillMaxWidth(),
+        OutlinedTextField(text, { if (it.length <= 2000) text = it }, modifier = Modifier.fillMaxWidth().testTag("note-editor"),
             minLines = 3, maxLines = 6, label = { Text(stringResource(R.string.note_text)) })
     }, confirmButton = { TextButton(onClick = { onSave(text); onDismiss() }) { Text(stringResource(R.string.save)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } })

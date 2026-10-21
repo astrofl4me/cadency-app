@@ -3,6 +3,7 @@ package br.edu.fsa.planner.data.local.dao
 import androidx.room.*
 import br.edu.fsa.planner.data.local.entity.PlannerItemEntity
 import br.edu.fsa.planner.data.local.entity.PlannerNoteEntity
+import br.edu.fsa.planner.data.local.entity.WeeklyHabitEntity
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -30,4 +31,12 @@ interface PlannerDao {
     fun observeNote(key: String): Flow<PlannerNoteEntity?>
 
     @Upsert suspend fun saveNote(note: PlannerNoteEntity)
+
+    @Query("SELECT * FROM weekly_habits WHERE weekStart = :weekStart ORDER BY id")
+    fun observeHabits(weekStart: LocalDate): Flow<List<WeeklyHabitEntity>>
+    @Query("SELECT * FROM weekly_habits WHERE id = :id")
+    suspend fun getHabit(id: Long): WeeklyHabitEntity?
+    @Insert suspend fun insertHabit(habit: WeeklyHabitEntity): Long
+    @Update suspend fun updateHabit(habit: WeeklyHabitEntity): Int
+    @Query("DELETE FROM weekly_habits WHERE id = :id") suspend fun deleteHabit(id: Long)
 }

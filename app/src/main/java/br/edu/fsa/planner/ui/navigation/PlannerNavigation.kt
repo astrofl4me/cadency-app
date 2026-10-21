@@ -49,6 +49,8 @@ import androidx.navigation.navArgument
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.runtime.remember
 import java.time.LocalDate
+import br.edu.fsa.planner.ui.theme.PlannerDimens as D
+import br.edu.fsa.planner.ui.theme.PlannerPaper as Paper
 
 private data class PlannerTab(val route: String, val label: Int, val icon: ImageVector)
 private val tabs = listOf(
@@ -87,10 +89,12 @@ fun PlannerNavigation(container: AppContainer) {
             snackbar.showSnackbar(resources.getString(message))
         }
     }
-    LaunchedEffect(session.ready, session.user) {
-        if (session.ready) {
+    LaunchedEffect(session.ready, session.user, entry?.destination?.route) {
+        val route = entry?.destination?.route
+        if (session.ready && route != null) {
             val target = if (session.user == null) "login" else "daily"
-            if (session.user == null || navController.currentDestination?.route in listOf(null, "splash", "login")) {
+            val needsRedirect = if (session.user == null) route != "login" else route in listOf("splash", "login")
+            if (needsRedirect) {
                 navController.navigate(target) { popUpTo(navController.graph.id) { inclusive = true }; launchSingleTop = true }
             }
         }
@@ -99,12 +103,13 @@ fun PlannerNavigation(container: AppContainer) {
         if (session.user != null && entry?.destination?.route in listOf("daily", "weekly", "monthly")) {
             FloatingActionButton(onClick = { addItem(when (entry?.destination?.route) {
                 "weekly" -> planner.weekAddDate(); "monthly" -> planner.monthAddDate(); else -> planner.currentDay()
-            }, ItemType.TASK) }) {
+            }, ItemType.TASK) }, containerColor = Paper.Ink, contentColor = Paper.Background) {
                 Icon(Icons.Outlined.Add, stringResource(R.string.add_item))
             }
         }
     }, bottomBar = {
-        if (session.user != null && tabs.any { it.route == entry?.destination?.route }) NavigationBar {
+        if (session.user != null && tabs.any { it.route == entry?.destination?.route }) NavigationBar(
+            containerColor = Paper.Background, tonalElevation = D.None) {
             tabs.forEach { tab ->
                 NavigationBarItem(
                     selected = entry?.destination?.route == tab.route,
@@ -115,6 +120,8 @@ fun PlannerNavigation(container: AppContainer) {
                     } },
                     icon = { Icon(tab.icon, contentDescription = null) },
                     label = { Text(stringResource(tab.label)) },
+                    colors = NavigationBarItemDefaults.colors(selectedIconColor = Paper.Ink, selectedTextColor = Paper.Ink,
+                        indicatorColor = Paper.Panel, unselectedIconColor = Paper.Muted, unselectedTextColor = Paper.Muted),
                 )
             }
         }
@@ -150,13 +157,13 @@ fun PlannerNavigation(container: AppContainer) {
                         val state by planner.daily.collectAsStateWithLifecycle()
                         DailyScreen(state, { planner.moveDay(-1) }, { planner.moveDay(1) }, planner::goToday,
                             ::addItem, { navController.navigate("editor?itemId=${it.id}") }, planner::toggle,
-                            planner::setMood, planner::saveDailyNote, planner::retryData)
+                            planner::setMood, planner::saveDailyReflection, planner::setWaterGlasses, planner::retryData)
                     } else if (tab.route == "weekly") {
                         val state by planner.weekly.collectAsStateWithLifecycle()
                         WeeklyScreen(state, { planner.moveWeek(-1) }, { planner.moveWeek(1) }, planner::goCurrentWeek,
                             ::addItem, { navController.navigate("editor?itemId=${it.id}") }, planner::toggle,
                             { planner.selectDay(it); navController.navigate("daily") { popUpTo("daily"); launchSingleTop = true } },
-                            planner::saveWeeklyNote, planner::retryData)
+                            planner::saveWeeklyNote, planner::saveHabit, planner::toggleHabit, planner::deleteHabit, planner::retryData)
                     } else if (tab.route == "monthly") {
                         val state by planner.monthly.collectAsStateWithLifecycle()
                         MonthlyScreen(state, { planner.moveMonth(-1) }, { planner.moveMonth(1) }, planner::goCurrentMonth,

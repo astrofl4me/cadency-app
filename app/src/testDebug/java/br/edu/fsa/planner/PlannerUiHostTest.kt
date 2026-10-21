@@ -25,6 +25,15 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.DayOfWeek
+import br.edu.fsa.planner.domain.model.*
+import br.edu.fsa.planner.ui.screens.daily.DailyScreen
+import br.edu.fsa.planner.ui.screens.weekly.WeeklyScreen
+import br.edu.fsa.planner.viewmodel.DailyUiState
+import br.edu.fsa.planner.viewmodel.WeeklyUiState
+import androidx.compose.runtime.mutableStateOf
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "w360dp-h800dp-xxhdpi")
@@ -96,18 +105,24 @@ class PlannerUiHostTest {
         compose.onNodeWithContentDescription("Concluir Revisar circuitos").performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithContentDescription("Marcar Revisar circuitos como pendente").fetchSemanticsNodes().isNotEmpty() }
         screenshot("daily-task")
+        compose.onNodeWithContentDescription("Registrar 3 copos de água").performScrollTo().performClick()
+        waitFor("3 de 8")
+        screenshot("daily-journal")
         compose.onNode(hasScrollAction()).performScrollToIndex(0)
         compose.onNodeWithContentDescription("Próximo dia").performClick()
         compose.onNodeWithText("Voltar para hoje").performClick()
         compose.onNodeWithText("Semana").performClick()
-        waitFor("Intenção da semana")
+        waitFor("Planner semanal")
         screenshot("weekly")
         compose.onNodeWithText("Mês").performClick()
         waitFor("Revisar circuitos")
         screenshot("monthly")
         compose.onNodeWithText("Hoje").performClick()
         waitFor("Revisar circuitos")
-        compose.onNodeWithText("Revisar circuitos").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Registrar 3 copos de água").performScrollTo()
+        compose.onNodeWithText("3 de 8").assertExists()
+        compose.onNodeWithTag("planner-paper-page").performScrollToNode(hasText("Revisar circuitos"))
+        compose.onNodeWithText("Revisar circuitos").performClick()
         compose.onNodeWithContentDescription("Excluir plano").performClick()
         compose.onNodeWithText("Excluir", useUnmergedTree = true).performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Revisar circuitos").fetchSemanticsNodes().isEmpty() }
@@ -116,5 +131,42 @@ class PlannerUiHostTest {
         screenshot("profile")
         compose.onNodeWithText("Sair da conta").performScrollTo().performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitFor("Experimentar com conta demo")
+    }
+
+    @Test
+    @Config(qualifiers = "w840dp-h1180dp-xhdpi")
+    fun paperPagesKeepTwoReadableColumnsOnTablet() {
+        val date = LocalDate.of(2026, 10, 21)
+        val items = listOf(
+            PlannerItem(id = 1, title = "Apresentar o projeto", date = date, type = ItemType.PRIORITY, priority = Priority.HIGH),
+            PlannerItem(id = 2, title = "Revisar anotações", date = date, startTime = LocalTime.of(9, 0)),
+        )
+        val weekly = mutableStateOf(false)
+        compose.setContent { PlannerTheme {
+            if (!weekly.value) DailyScreen(
+                state = DailyUiState(date, date, items, note = PlannerNote("day:$date", text = "Ideias para a próxima etapa.",
+                    mood = Mood.GOOD, waterGlasses = 3, gratitude = "Uma manhã tranquila.", selfCare = "Caminhar ao ar livre."), loading = false),
+                onPrevious = {}, onNext = {}, onToday = {}, onAdd = { _, _ -> }, onEdit = {}, onToggle = {},
+                onMood = {}, onNote = { _, _ -> }, onWater = {}, onRetry = {},
+            ) else WeeklyScreen(
+                state = WeeklyUiState(PlannerDates.week(date), date, items,
+                    note = PlannerNote("week", text = "Separar tempo para descansar.", highlight = "Fazer uma coisa de cada vez."),
+                    loading = false, habits = listOf(WeeklyHabit(1, PlannerDates.week(date).start, "Ler",
+                        setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY)))),
+                onPrevious = {}, onNext = {}, onCurrent = {}, onAdd = { _, _ -> }, onEdit = {}, onToggle = {},
+                onOpenDay = {}, onNote = { _, _ -> }, onSaveHabit = {}, onToggleHabit = { _, _ -> }, onDeleteHabit = {}, onRetry = {},
+            )
+        } }
+        compose.onNodeWithText("Como estou me sentindo?").assertIsDisplayed()
+        compose.onNodeWithText("Hoje eu agradeço por").assertIsDisplayed()
+        val priorityBounds = compose.onNodeWithText("Prioridades").getUnclippedBoundsInRoot()
+        val moodBounds = compose.onNodeWithText("Como estou me sentindo?").getUnclippedBoundsInRoot()
+        org.junit.Assert.assertTrue(moodBounds.left > priorityBounds.right)
+        screenshot("daily-tablet")
+        compose.runOnIdle { weekly.value = true }
+        compose.onNodeWithText("Planner semanal").assertIsDisplayed()
+        compose.onNodeWithText("Acompanhamento de hábitos").assertIsDisplayed()
+        compose.onNodeWithText("domingo").assertIsDisplayed()
+        screenshot("weekly-tablet")
     }
 }

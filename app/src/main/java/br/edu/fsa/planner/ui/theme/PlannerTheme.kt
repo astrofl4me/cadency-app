@@ -30,6 +30,7 @@ object PlannerColors {
 }
 
 object PlannerDimens {
+    val None = 0.dp
     val Tiny = 4.dp
     val Small = 8.dp
     val Medium = 12.dp
@@ -45,6 +46,36 @@ object PlannerDimens {
     val ContentWidth = 640.dp
     val Hairline = 1.dp
     val AccentLine = 3.dp
+    val PaperContentWidth = 1000.dp
+    val PaperColumnsBreakpoint = 600.dp
+    val PaperRuleHeight = 36.dp
+    val PaperDayHeight = 108.dp
+    val PaperNotesHeight = 160.dp
+    val PaperHabitLabelWidth = 96.dp
+    val PaperWeekdayWidth = 84.dp
+    val PaperDot = 10.dp
+    val PaperMood = 28.dp
+}
+
+object PlannerFonts {
+    val Heading = FontFamily.Serif
+    val Body = FontFamily.SansSerif
+}
+
+object PlannerPaper {
+    val Background = Color(0xFFFFFEFC)
+    val Panel = Color(0xFFF3F2EF)
+    val Ink = Color(0xFF42433F)
+    val Muted = Color(0xFF6F716B)
+    val Rule = Color(0xFFCFD0CA)
+    val Marker = Color(0xFF858881)
+    val Selected = Color(0xFFE1E5DC)
+    val Shape = RoundedCornerShape(2.dp)
+    val Title = TextStyle(fontFamily = PlannerFonts.Heading, fontSize = 30.sp, lineHeight = 38.sp)
+    val Label = TextStyle(fontFamily = PlannerFonts.Body, fontSize = 11.sp, lineHeight = 16.sp,
+        fontWeight = FontWeight.Medium, letterSpacing = 1.sp)
+    val Body = TextStyle(fontFamily = PlannerFonts.Body, fontSize = 14.sp, lineHeight = 22.sp)
+    val Caption = TextStyle(fontFamily = PlannerFonts.Body, fontSize = 12.sp, lineHeight = 18.sp)
 }
 
 private val Colors = lightColorScheme(
@@ -61,18 +92,18 @@ private val Colors = lightColorScheme(
 )
 
 private val Type = Typography(
-    headlineLarge = TextStyle(fontFamily = FontFamily.Serif, fontWeight = FontWeight.Normal, fontSize = 34.sp, lineHeight = 40.sp),
-    headlineMedium = TextStyle(fontFamily = FontFamily.Serif, fontWeight = FontWeight.Normal, fontSize = 28.sp, lineHeight = 34.sp),
-    headlineSmall = TextStyle(fontFamily = FontFamily.Serif, fontWeight = FontWeight.Normal, fontSize = 24.sp, lineHeight = 30.sp),
-    titleLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 21.sp, lineHeight = 28.sp),
-    titleMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 24.sp),
-    titleSmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, lineHeight = 20.sp),
-    bodyLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontSize = 16.sp, lineHeight = 24.sp),
-    bodyMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontSize = 14.sp, lineHeight = 21.sp),
-    bodySmall = TextStyle(fontFamily = FontFamily.SansSerif, fontSize = 12.sp, lineHeight = 18.sp),
-    labelLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
-    labelMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 18.sp),
-    labelSmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 11.sp, lineHeight = 16.sp),
+    headlineLarge = TextStyle(fontFamily = PlannerFonts.Heading, fontWeight = FontWeight.Normal, fontSize = 34.sp, lineHeight = 40.sp),
+    headlineMedium = TextStyle(fontFamily = PlannerFonts.Heading, fontWeight = FontWeight.Normal, fontSize = 28.sp, lineHeight = 34.sp),
+    headlineSmall = TextStyle(fontFamily = PlannerFonts.Heading, fontWeight = FontWeight.Normal, fontSize = 24.sp, lineHeight = 30.sp),
+    titleLarge = TextStyle(fontFamily = PlannerFonts.Body, fontWeight = FontWeight.Medium, fontSize = 21.sp, lineHeight = 28.sp),
+    titleMedium = TextStyle(fontFamily = PlannerFonts.Body, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 24.sp),
+    titleSmall = TextStyle(fontFamily = PlannerFonts.Body, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, lineHeight = 20.sp),
+    bodyLarge = TextStyle(fontFamily = PlannerFonts.Body, fontSize = 16.sp, lineHeight = 24.sp),
+    bodyMedium = TextStyle(fontFamily = PlannerFonts.Body, fontSize = 14.sp, lineHeight = 21.sp),
+    bodySmall = TextStyle(fontFamily = PlannerFonts.Body, fontSize = 12.sp, lineHeight = 18.sp),
+    labelLarge = TextStyle(fontFamily = PlannerFonts.Body, fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
+    labelMedium = TextStyle(fontFamily = PlannerFonts.Body, fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 18.sp),
+    labelSmall = TextStyle(fontFamily = PlannerFonts.Body, fontWeight = FontWeight.Medium, fontSize = 11.sp, lineHeight = 16.sp),
 )
 
 @Composable

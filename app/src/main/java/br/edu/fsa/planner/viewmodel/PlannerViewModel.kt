@@ -11,6 +11,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.Clock
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -24,6 +25,7 @@ data class WeeklyUiState(
     val interval: DateInterval = PlannerDates.week(LocalDate.now()), val today: LocalDate = LocalDate.now(),
     val items: List<PlannerItem> = emptyList(), val note: PlannerNote = PlannerNote(""),
     val loading: Boolean = true, val hasError: Boolean = false,
+    val habits: List<WeeklyHabit> = emptyList(),
 )
 data class MonthlyUiState(
     val month: YearMonth = YearMonth.now(), val selectedDate: LocalDate = LocalDate.now(), val today: LocalDate = LocalDate.now(),
@@ -52,8 +54,9 @@ class PlannerViewModel(private val repository: PlannerRepository, private val sa
 
     val weekly = combine(week, today, retry) { date, current, _ -> PlannerDates.week(LocalDate.parse(date)) to current }
         .flatMapLatest { (interval, current) ->
-            combine(repository.observeRange(interval), repository.observeNote("week:${interval.start}")) { items, note ->
-                WeeklyUiState(interval, current, items, note, loading = false)
+            combine(repository.observeRange(interval), repository.observeNote("week:${interval.start}"),
+                repository.observeHabits(interval.start)) { items, note, habits ->
+                WeeklyUiState(interval, current, items, note, loading = false, habits = habits)
             }.onStart { emit(WeeklyUiState(interval, current)) }
                 .catch { emit(WeeklyUiState(interval, current, loading = false, hasError = true)) }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WeeklyUiState(PlannerDates.week(today.value), today.value))
@@ -93,8 +96,21 @@ class PlannerViewModel(private val repository: PlannerRepository, private val sa
         repository.setCompleted(item, !item.isCompleted)
     } }
     fun saveDailyNote(text: String) {
+        saveDailyReflection(text, DailyNoteField.NOTES)
+    }
+    fun saveDailyReflection(text: String, field: DailyNoteField) {
         val key = "day:${currentDay()}"
-        mutate(PlannerNotice.NOTE_SAVED) { repository.updateNote(key) { it.copy(text = text.take(2000)) } }
+        mutate(PlannerNotice.NOTE_SAVED) { repository.updateNote(key) {
+            when (field) {
+                DailyNoteField.NOTES -> it.copy(text = text.take(2000))
+                DailyNoteField.GRATITUDE -> it.copy(gratitude = text.take(2000))
+                DailyNoteField.SELF_CARE -> it.copy(selfCare = text.take(2000))
+            }
+        } }
+    }
+    fun setWaterGlasses(glasses: Int) {
+        val key = "day:${currentDay()}"
+        mutate(null) { repository.updateNote(key) { it.copy(waterGlasses = glasses.coerceIn(0, PlannerJournal.WaterGlasses)) } }
     }
     fun setMood(mood: Mood) {
         val key = "day:${currentDay()}"
@@ -108,6 +124,9 @@ class PlannerViewModel(private val repository: PlannerRepository, private val sa
             }
         }
     }
+    fun saveHabit(habit: WeeklyHabit) { mutate(PlannerNotice.NOTE_SAVED) { repository.saveHabit(habit) } }
+    fun toggleHabit(habit: WeeklyHabit, day: DayOfWeek) { mutate(null) { repository.toggleHabit(habit.id, day) } }
+    fun deleteHabit(habit: WeeklyHabit) { mutate(PlannerNotice.NOTE_SAVED) { repository.deleteHabit(habit.id) } }
     fun editorFinished(result: EditorResult) { viewModelScope.launch { noticeChannel.send(if (result == EditorResult.SAVED) PlannerNotice.SAVED else PlannerNotice.DELETED) } }
 
     private fun mutate(success: PlannerNotice?, operation: suspend () -> Unit) {
