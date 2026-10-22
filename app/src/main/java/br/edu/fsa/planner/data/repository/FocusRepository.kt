@@ -28,8 +28,11 @@ class FocusRepository(private val dao: FocusDao, private val clock: Clock = Cloc
     }
     suspend fun pause(id: Long) = mutex.withLock {
         val session = checkNotNull(get(id))
-        if (session.status == FocusStatus.RUNNING) dao.update(session.copy(elapsedMillis = FocusRules.elapsed(session, clock.millis()),
-            resumedAt = null, status = FocusStatus.PAUSED).toEntity())
+        if (session.status == FocusStatus.RUNNING) {
+            val elapsed = FocusRules.elapsed(session, clock.millis())
+            dao.update(if (elapsed >= session.plannedSeconds * 1000L) finished(session, elapsed).toEntity()
+                else session.copy(elapsedMillis = elapsed, resumedAt = null, status = FocusStatus.PAUSED).toEntity())
+        }
     }
     suspend fun resume(id: Long) = mutex.withLock {
         val session = checkNotNull(get(id))
@@ -39,8 +42,13 @@ class FocusRepository(private val dao: FocusDao, private val clock: Clock = Cloc
         val session = checkNotNull(get(id))
         if (session.endedAt == null) {
             val elapsed = FocusRules.elapsed(session, clock.millis())
-            dao.update(session.copy(endedAt = clock.millis(), elapsedMillis = elapsed, resumedAt = null,
-                status = if (elapsed >= session.plannedSeconds * 1000L) FocusStatus.FINISHED else FocusStatus.STOPPED).toEntity())
+            dao.update(finished(session, elapsed).toEntity())
         }
+    }
+    private fun finished(session: FocusSession, elapsed: Long): FocusSession {
+        val complete = elapsed >= session.plannedSeconds * 1000L
+        val end = if (complete && session.resumedAt != null) session.resumedAt + session.plannedSeconds * 1000L - session.elapsedMillis else clock.millis()
+        return session.copy(endedAt = end, elapsedMillis = elapsed, resumedAt = null,
+            status = if (complete) FocusStatus.FINISHED else FocusStatus.STOPPED)
     }
 }

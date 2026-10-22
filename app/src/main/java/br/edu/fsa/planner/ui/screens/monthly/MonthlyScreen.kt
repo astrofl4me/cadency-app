@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
@@ -32,7 +33,7 @@ fun MonthlyScreen(state: MonthlyUiState, onPrevious: () -> Unit, onNext: () -> U
                   onEdit: (PlannerItem) -> Unit, onToggle: (PlannerItem) -> Unit, onRetry: () -> Unit) {
     val selectedItems = PlannerDates.itemsIn(state.items, DateInterval(state.selectedDate, state.selectedDate))
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        LazyColumn(Modifier.widthIn(max = D.ContentWidth).fillMaxSize(), contentPadding = PaddingValues(top = D.Page, bottom = D.Hero + D.Page)) {
+        LazyColumn(Modifier.widthIn(max = D.ContentWidth).fillMaxSize().testTag("planner-month-page"), contentPadding = PaddingValues(top = D.Page, bottom = D.Hero + D.Page)) {
             item {
                 Column(Modifier.padding(horizontal = D.Page)) {
                     PlannerHeader(stringResource(R.string.monthly_eyebrow), state.month.titleLabel(), stringResource(R.string.monthly_subtitle))

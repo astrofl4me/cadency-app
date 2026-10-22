@@ -6,11 +6,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.*
 import br.edu.fsa.planner.ui.components.*
@@ -19,7 +22,7 @@ import br.edu.fsa.planner.viewmodel.HabitsState
 import java.time.LocalDate
 
 fun HabitIcon.vector() = when (this) {
-    HabitIcon.WATER -> Icons.Outlined.WaterDrop; HabitIcon.BOOK -> Icons.Outlined.MenuBook
+    HabitIcon.WATER -> Icons.Outlined.WaterDrop; HabitIcon.BOOK -> Icons.AutoMirrored.Outlined.MenuBook
     HabitIcon.HEALTH -> Icons.Outlined.FavoriteBorder; HabitIcon.STUDY -> Icons.Outlined.School
     HabitIcon.CALM -> Icons.Outlined.Spa; HabitIcon.CHECK -> Icons.Outlined.CheckCircleOutline
 }
@@ -35,7 +38,9 @@ fun HabitsScreen(state: HabitsState, onAdd: () -> Unit, onEdit: (Habit) -> Unit,
             Text(stringResource(R.string.week_interval, state.week.start.shortLabel(), state.week.endInclusive.shortLabel(), state.week.endInclusive.year.toString()),
                 style = MaterialTheme.typography.bodySmall)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(R.string.habits_archived), Modifier.weight(1f)); Switch(state.archived, onArchived)
+                Text(stringResource(R.string.habits_archived), Modifier.weight(1f))
+                val archivedLabel = stringResource(R.string.habits_archived)
+                Switch(state.archived, onArchived, Modifier.semantics { contentDescription = archivedLabel })
             }
             Button(onClick = onAdd) { Icon(Icons.Outlined.Add, null); Text(stringResource(R.string.paper_add_habit)) }
         }
@@ -57,10 +62,11 @@ fun HabitsScreen(state: HabitsState, onAdd: () -> Unit, onEdit: (Habit) -> Unit,
                 LazyRow {
                     items(state.week.days, key = { it.toString() }) { date ->
                         val checked = state.checks.any { it.habitId == habit.id && it.date == date }
+                        val checkLabel = stringResource(R.string.habit_check_date, habit.name, date.accessibilityLabel())
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(date.weekdayLabel().take(1).uppercase(PlannerLocale), style = MaterialTheme.typography.labelSmall)
                             Checkbox(checked, { onToggle(habit, date) }, enabled = date <= state.today && HabitRules.isPlanned(habit, date),
-                                modifier = Modifier.size(D.Touch))
+                                modifier = Modifier.size(D.Touch).semantics { contentDescription = checkLabel })
                             Text(date.dayOfMonth.toString(), style = MaterialTheme.typography.labelSmall)
                         }
                     }

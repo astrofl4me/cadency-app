@@ -14,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.*
 import br.edu.fsa.planner.ui.components.*
@@ -30,7 +32,7 @@ fun HabitEditorScreen(state: HabitEditorState, history: List<HabitCheckIn>, onUp
     Scaffold(topBar = { CadencyTopBar(stringResource(if (habit.id == 0L) R.string.paper_add_habit else R.string.paper_edit_habit), onBack) }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).imePadding().padding(D.Page),
             verticalArrangement = Arrangement.spacedBy(D.Large)) {
-            if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if (state.loading) { LinearProgressIndicator(Modifier.fillMaxWidth()); return@Column }
             if (state.error) Text(stringResource(R.string.storage_error), color = MaterialTheme.colorScheme.error)
             OutlinedTextField(habit.name, { onUpdate(habit.copy(name = it.take(60))) }, label = { Text(stringResource(R.string.paper_habit_name)) },
                 modifier = Modifier.fillMaxWidth(), singleLine = true, isError = state.invalid && habit.name.isBlank())
@@ -44,9 +46,11 @@ fun HabitEditorScreen(state: HabitEditorState, history: List<HabitCheckIn>, onUp
             Text(stringResource(R.string.habit_days), style = MaterialTheme.typography.titleSmall)
             LazyRow {
                 items(DayOfWeek.entries) { day ->
+                    val label = day.getDisplayName(java.time.format.TextStyle.FULL, PlannerLocale)
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(day.getDisplayName(java.time.format.TextStyle.SHORT, PlannerLocale), style = MaterialTheme.typography.labelSmall)
-                        Checkbox(day in habit.days, { checked -> onUpdate(habit.copy(days = if (checked) habit.days + day else habit.days - day)) })
+                        Checkbox(day in habit.days, { checked -> onUpdate(habit.copy(days = if (checked) habit.days + day else habit.days - day)) },
+                            modifier = Modifier.semantics { contentDescription = label })
                     }
                 }
             }
@@ -61,7 +65,8 @@ fun HabitEditorScreen(state: HabitEditorState, history: List<HabitCheckIn>, onUp
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.habit_archive), Modifier.weight(1f))
-                Switch(habit.isArchived, { onUpdate(habit.copy(isArchived = it)) })
+                val archiveLabel = stringResource(R.string.habit_archive)
+                Switch(habit.isArchived, { onUpdate(habit.copy(isArchived = it)) }, Modifier.semantics { contentDescription = archiveLabel })
             }
             if (state.invalid) Text(stringResource(R.string.habit_form_error), color = MaterialTheme.colorScheme.error)
             Button(onClick = onSave, enabled = !state.busy && !state.loading, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.save)) }

@@ -19,7 +19,7 @@ class HabitsViewModel(private val repository: HabitRepository, private val saved
     private val error = MutableStateFlow(false)
     val state = combine(day, week, archived) { today, value, show -> Triple(today, PlannerDates.week(LocalDate.parse(value)), show) }
         .flatMapLatest { (today, interval, show) ->
-            combine(repository.habits, repository.checkIns(DateInterval(today.minusDays(365), maxOf(today, interval.endInclusive))), error) { habits, checks, failed ->
+            combine(repository.habits, repository.checkIns(DateInterval(minOf(today.minusDays(365), interval.start), maxOf(today, interval.endInclusive))), error) { habits, checks, failed ->
                 HabitsState(today, interval, habits.filter { (it.isArchived || (it.endsOn != null && it.endsOn < today)) == show }, checks, false, failed, show)
             }.catch { emit(HabitsState(today, interval, loading = false, error = true)) }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HabitsState())
@@ -47,6 +47,9 @@ class HabitEditorViewModel(private val repository: HabitRepository, private val 
             val initial = if (id == 0L) Habit(name = "") else checkNotNull(repository.get(id))
             val habit = initial.copy(name = saved["habit_name"] ?: initial.name, description = saved["habit_description"] ?: initial.description,
                 frequency = saved.get<String>("habit_frequency")?.let(FrequencyType::valueOf) ?: initial.frequency,
+                icon = saved.get<String>("habit_icon")?.let(HabitIcon::valueOf) ?: initial.icon,
+                category = saved.get<String>("habit_category")?.let(Category::valueOf) ?: initial.category,
+                isArchived = saved["habit_archived"] ?: initial.isArchived,
                 targetPerPeriod = saved["habit_target"] ?: initial.targetPerPeriod,
                 days = saved.get<Int>("habit_days")?.let { mask -> java.time.DayOfWeek.entries.filter { mask and (1 shl (it.value - 1)) != 0 }.toSet() } ?: initial.days)
             _state.value = HabitEditorState(habit, loading = false)
@@ -57,6 +60,7 @@ class HabitEditorViewModel(private val repository: HabitRepository, private val 
         _state.value = _state.value.copy(habit = habit, invalid = false)
         saved["habit_name"] = habit.name; saved["habit_description"] = habit.description
         saved["habit_frequency"] = habit.frequency.name; saved["habit_target"] = habit.targetPerPeriod
+        saved["habit_icon"] = habit.icon.name; saved["habit_category"] = habit.category.name; saved["habit_archived"] = habit.isArchived
         saved["habit_days"] = habit.days.fold(0) { mask, day -> mask or (1 shl (day.value - 1)) }
     }
     fun save() {

@@ -10,6 +10,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.*
 import br.edu.fsa.planner.ui.components.*
@@ -44,8 +46,9 @@ fun TaskDetailsScreen(state: TaskDetailsState, draft: String, onDraft: (String) 
                 }
                 items(state.steps, key = { it.id }) { step ->
                     var menu by rememberSaveable { mutableStateOf(false) }
+                    val stepLabel = stringResource(R.string.subtask_check, step.title)
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(step.isCompleted, { onToggle(step) })
+                        Checkbox(step.isCompleted, { onToggle(step) }, Modifier.semantics { contentDescription = stepLabel })
                         Text(step.title, Modifier.weight(1f))
                         Box {
                             IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.subtask_options, step.title)) }

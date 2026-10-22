@@ -6,6 +6,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.testTag
 import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.PlannerItem
 import br.edu.fsa.planner.ui.components.PlannerDateDialog
@@ -24,6 +25,7 @@ fun RolloverDialog(state: RolloverState, onSchedule: (PlannerItem, LocalDate) ->
             if (state.error) item { Text(stringResource(R.string.storage_error), color = MaterialTheme.colorScheme.error) }
             if (state.items.isEmpty()) item { Text(stringResource(R.string.rollover_done)) }
             items(state.items, key = { it.id }) { item ->
+                Column(Modifier.fillMaxWidth().testTag("rollover-${item.id}")) {
                 Text(item.title, style = MaterialTheme.typography.titleSmall)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(D.Small)) {
                     TextButton(onClick = { onSchedule(item, state.today) }) { Text(stringResource(R.string.today_label)) }
@@ -32,6 +34,7 @@ fun RolloverDialog(state: RolloverState, onSchedule: (PlannerItem, LocalDate) ->
                     TextButton(onClick = { onDiscard(item) }) { Text(stringResource(R.string.rollover_discard)) }
                 }
                 HorizontalDivider()
+                }
             }
         } }, confirmButton = { TextButton(onClick = onAll, enabled = state.items.isNotEmpty()) { Text(stringResource(R.string.rollover_all)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.rollover_later)) } })

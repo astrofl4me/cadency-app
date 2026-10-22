@@ -34,6 +34,13 @@ import br.edu.fsa.planner.ui.screens.weekly.WeeklyScreen
 import br.edu.fsa.planner.viewmodel.DailyUiState
 import br.edu.fsa.planner.viewmodel.WeeklyUiState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import android.content.res.Configuration
+import br.edu.fsa.planner.ui.theme.cadencyColors
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "w360dp-h800dp-xxhdpi")
@@ -42,6 +49,29 @@ class PlannerUiHostTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val storeScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     @After fun closeStore() = runBlocking { storeScope.coroutineContext.job.cancelAndJoin() }
+
+    @Test fun systemThemeRespondsToDeviceConfigurationWhileForcedModesOverrideIt() {
+        val night = mutableStateOf(false)
+        val mode = mutableStateOf(ThemeMode.SYSTEM)
+        var background = androidx.compose.ui.graphics.Color.Unspecified
+        compose.setContent {
+            val configuration = Configuration(LocalConfiguration.current).apply {
+                uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
+                    if (night.value) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
+            }
+            CompositionLocalProvider(LocalConfiguration provides configuration) {
+                PlannerTheme(mode.value, PlannerMood.COZY) {
+                    val color = MaterialTheme.colorScheme.background
+                    SideEffect { background = color }
+                    Text("Cadency")
+                }
+            }
+        }
+        compose.runOnIdle { org.junit.Assert.assertEquals(cadencyColors(PlannerMood.COZY, false).background, background); night.value = true }
+        compose.runOnIdle { org.junit.Assert.assertEquals(cadencyColors(PlannerMood.COZY, true).background, background); mode.value = ThemeMode.LIGHT }
+        compose.runOnIdle { org.junit.Assert.assertEquals(cadencyColors(PlannerMood.COZY, false).background, background); mode.value = ThemeMode.DARK; night.value = false }
+        compose.runOnIdle { org.junit.Assert.assertEquals(cadencyColors(PlannerMood.COZY, true).background, background) }
+    }
 
     private fun waitFor(text: String) {
         compose.waitUntil(10_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
@@ -99,8 +129,12 @@ class PlannerUiHostTest {
         compose.onNodeWithText("Salvar plano").performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitForCheckbox("Concluir Estudar circuitos")
         compose.onNodeWithText("Estudar circuitos").performScrollTo().performClick()
+        waitFor("Etapas")
+        compose.onNodeWithContentDescription("Editar plano").performClick()
         compose.onNode(hasSetTextAction() and hasText("O que você quer planejar?")).performTextReplacement("Revisar circuitos")
         compose.onNodeWithText("Salvar plano").performSemanticsAction(SemanticsActions.OnClick) { it() }
+        waitFor("Etapas")
+        compose.onNodeWithContentDescription("Voltar").performClick()
         waitForCheckbox("Concluir Revisar circuitos")
         compose.onNodeWithContentDescription("Concluir Revisar circuitos").performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithContentDescription("Marcar Revisar circuitos como pendente").fetchSemanticsNodes().isNotEmpty() }
@@ -115,7 +149,8 @@ class PlannerUiHostTest {
         waitFor("Planner semanal")
         screenshot("weekly")
         compose.onNodeWithText("Mês").performClick()
-        waitFor("Revisar circuitos")
+        waitFor("MEU MÊS")
+        compose.onNodeWithTag("planner-month-page").performScrollToNode(hasText("Revisar circuitos"))
         screenshot("monthly")
         compose.onNodeWithText("Hoje").performClick()
         waitFor("Revisar circuitos")
@@ -123,6 +158,8 @@ class PlannerUiHostTest {
         compose.onNodeWithText("3 de 8").assertExists()
         compose.onNodeWithTag("planner-paper-page").performScrollToNode(hasText("Revisar circuitos"))
         compose.onNodeWithText("Revisar circuitos").performClick()
+        waitFor("Etapas")
+        compose.onNodeWithContentDescription("Editar plano").performClick()
         compose.onNodeWithContentDescription("Excluir plano").performClick()
         compose.onNodeWithText("Excluir", useUnmergedTree = true).performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Revisar circuitos").fetchSemanticsNodes().isEmpty() }

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="habit_check_date">%1$s, %2$s</string>
+    <string name="subtask_check">Etapa: %1$s</string>
     <string name="week_rhythm">Ritmo da semana</string>
     <string name="week_rhythm_hint">Os pontos indicam a carga das tarefas em aberto, considerando as prioridades.</string>
     <string name="week_rhythm_level">Carga do dia: %1$d de 5</string>

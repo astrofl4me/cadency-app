@@ -57,9 +57,9 @@ interface PlannerDao : HabitDao {
     fun observeCompletedCounts(start: LocalDate, end: LocalDate): Flow<List<DailyCount>>
     @Query("SELECT COUNT(DISTINCT date) FROM planner_items WHERE isInbox = 0 AND isDiscarded = 0 AND date BETWEEN :start AND :end")
     fun observePlannedDays(start: LocalDate, end: LocalDate): Flow<Int>
-    @Query("UPDATE planner_items SET originalDate = COALESCE(originalDate,date), date = :date, rolloverCount = rolloverCount + 1, isInbox = 0, updatedAt = :timestamp WHERE id = :id AND isCompleted = 0 AND isDiscarded = 0")
+    @Query("UPDATE planner_items SET originalDate = COALESCE(originalDate,date), date = :date, rolloverCount = rolloverCount + 1, isInbox = 0, updatedAt = :timestamp WHERE id = :id AND isCompleted = 0 AND isDiscarded = 0 AND (date != :date OR isInbox = 1)")
     suspend fun reschedule(id: Long, date: LocalDate, timestamp: Long)
-    @Query("UPDATE planner_items SET originalDate = COALESCE(originalDate,date), rolloverCount = rolloverCount + 1, isInbox = 1, updatedAt = :timestamp WHERE id = :id AND isCompleted = 0")
+    @Query("UPDATE planner_items SET originalDate = COALESCE(originalDate,date), rolloverCount = rolloverCount + 1, isInbox = 1, updatedAt = :timestamp WHERE id = :id AND isCompleted = 0 AND isDiscarded = 0 AND isInbox = 0")
     suspend fun moveToInbox(id: Long, timestamp: Long)
     @Query("UPDATE planner_items SET isDiscarded = 1, updatedAt = :timestamp WHERE id = :id AND isCompleted = 0")
     suspend fun discard(id: Long, timestamp: Long)

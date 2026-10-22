@@ -20,6 +20,7 @@ class PlannerFlowTest {
 
     private fun openTodayTab() {
         compose.onNode(hasText("Hoje") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).performClick()
+        compose.onNodeWithTag("planner-paper-page").performScrollToIndex(0)
     }
 
     private fun waitForHabitSelection() {
@@ -51,11 +52,15 @@ class PlannerFlowTest {
         waitFor("MEU DIA")
         compose.onNodeWithContentDescription("Adicionar plano").performClick()
         compose.onNode(hasSetTextAction() and hasText("O que você quer planejar?")).performTextInput("Teste do planner")
-        compose.onNodeWithText("Salvar plano").performClick()
+        compose.onNodeWithText("Salvar plano").performSemanticsAction(SemanticsActions.OnClick) { it() }
         compose.waitUntil(10_000) { compose.onAllNodesWithContentDescription("Concluir Teste do planner").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Teste do planner").performScrollTo().performClick()
+        waitFor("Etapas")
+        compose.onNodeWithContentDescription("Editar plano").performClick()
         compose.onNode(hasSetTextAction() and hasText("O que você quer planejar?")).performTextReplacement("Plano revisado")
-        compose.onNodeWithText("Salvar plano").performClick()
+        compose.onNodeWithText("Salvar plano").performSemanticsAction(SemanticsActions.OnClick) { it() }
+        waitFor("Etapas")
+        compose.onNodeWithContentDescription("Voltar").performSemanticsAction(SemanticsActions.OnClick) { it() }
         compose.waitUntil(10_000) { compose.onAllNodesWithContentDescription("Concluir Plano revisado").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithContentDescription("Concluir Plano revisado").performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithContentDescription("Marcar Plano revisado como pendente").fetchSemanticsNodes().isNotEmpty() }
@@ -73,6 +78,8 @@ class PlannerFlowTest {
         openTodayTab()
         waitFor("Plano revisado")
         compose.onNodeWithText("Plano revisado").performScrollTo().performClick()
+        waitFor("Etapas")
+        compose.onNodeWithContentDescription("Editar plano").performClick()
         compose.onNodeWithContentDescription("Excluir plano").performClick()
         compose.onNodeWithText("Excluir", useUnmergedTree = true).performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Plano revisado").fetchSemanticsNodes().isEmpty() }
