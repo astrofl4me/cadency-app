@@ -46,11 +46,11 @@ fun DailyScreen(state: DailyUiState, onPrevious: () -> Unit, onNext: () -> Unit,
                     PaperColumns(primary = {
                         PaperItemSection(stringResource(R.string.priorities), priorities, shaded = true,
                             emptyMessage = stringResource(R.string.priorities_empty),
-                            onAdd = { onAdd(state.date, ItemType.PRIORITY) }, onToggle = onToggle, onEdit = onEdit)
+                            onAdd = { onAdd(state.date, ItemType.PRIORITY) }, onToggle = onToggle, onEdit = onEdit, progress = state.stepProgress)
                         Spacer(Modifier.height(D.Large))
                         PaperItemSection(stringResource(R.string.day_agenda), agenda, minimumRows = 5,
                             emptyMessage = stringResource(R.string.daily_empty),
-                            onAdd = { onAdd(state.date, ItemType.TASK) }, onToggle = onToggle, onEdit = onEdit)
+                            onAdd = { onAdd(state.date, ItemType.TASK) }, onToggle = onToggle, onEdit = onEdit, progress = state.stepProgress)
                         if (state.items.isEmpty()) TextButton(onClick = { onAdd(state.date, ItemType.TASK) }) {
                             Text(stringResource(R.string.add_first), color = Paper.Ink)
                         }

@@ -25,3 +25,7 @@ data class FocusSession(val id: Long = 0, val plannerItemId: Long? = null, val t
     val day: LocalDate, val startedAt: Long, val endedAt: Long? = null, val plannedSeconds: Int,
     val elapsedMillis: Long = 0, val resumedAt: Long? = null, val status: FocusStatus = FocusStatus.RUNNING)
 data class DailyCount(val date: LocalDate, val value: Long)
+data class SubtaskProgress(val plannerItemId: Long, val total: Int, val done: Int) {
+    val fraction get() = if (total == 0) 0f else done.toFloat() / total
+    val allComplete get() = total > 0 && done == total
+}

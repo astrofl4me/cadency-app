@@ -23,6 +23,18 @@ class PlannerRepository(private val dao: PlannerDao, private val clock: Clock = 
     fun observeCompletion(interval: DateInterval, completed: Boolean) =
         dao.observeCompletion(interval.start, interval.endInclusive, completed).map { rows -> rows.map { it.toModel() } }
     suspend fun get(id: Long) = dao.get(id)?.toModel()
+    fun observeItem(id: Long) = dao.observeItem(id).map { it?.toModel() }
+    fun observeSubtasks(id: Long) = dao.observeSubtasks(id).map { rows -> rows.map { it.toModel() } }
+    fun observeSubtaskProgress(date: LocalDate) = dao.observeSubtaskProgress(date)
+    suspend fun addSubtask(parentId: Long, title: String) {
+        require(title.trim().length in 1..120)
+        val position = (dao.subtaskRows(parentId).maxOfOrNull { it.position } ?: -1) + 1
+        dao.addSubtask(br.edu.fsa.planner.data.local.entity.SubtaskEntity(plannerItemId = parentId,
+            title = title.trim(), isCompleted = false, position = position, createdAt = clock.millis()))
+    }
+    suspend fun toggleSubtask(step: Subtask) = dao.setSubtaskCompleted(step.id, !step.isCompleted)
+    suspend fun removeSubtask(id: Long) = dao.removeSubtask(id)
+    suspend fun moveSubtask(step: Subtask, direction: Int) = dao.moveSubtask(step.plannerItemId, step.id, direction)
 
     suspend fun save(item: PlannerItem): Long {
         val now = clock.millis()

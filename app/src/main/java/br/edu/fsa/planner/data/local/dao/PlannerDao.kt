@@ -4,6 +4,8 @@ import androidx.room.*
 import br.edu.fsa.planner.data.local.entity.PlannerItemEntity
 import br.edu.fsa.planner.data.local.entity.PlannerNoteEntity
 import br.edu.fsa.planner.data.local.entity.WeeklyHabitEntity
+import br.edu.fsa.planner.data.local.entity.SubtaskEntity
+import br.edu.fsa.planner.domain.model.SubtaskProgress
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -20,6 +22,24 @@ interface PlannerDao : HabitDao {
 
     @Query("SELECT * FROM planner_items WHERE id = :id")
     suspend fun get(id: Long): PlannerItemEntity?
+    @Query("SELECT * FROM planner_items WHERE id = :id") fun observeItem(id: Long): Flow<PlannerItemEntity?>
+    @Query("SELECT * FROM subtasks WHERE plannerItemId = :id ORDER BY position, id") fun observeSubtasks(id: Long): Flow<List<SubtaskEntity>>
+    @Query("SELECT * FROM subtasks WHERE plannerItemId = :id ORDER BY position, id") suspend fun subtaskRows(id: Long): List<SubtaskEntity>
+    @Insert suspend fun addSubtask(step: SubtaskEntity): Long
+    @Query("UPDATE subtasks SET isCompleted = :completed WHERE id = :id") suspend fun setSubtaskCompleted(id: Long, completed: Boolean)
+    @Query("DELETE FROM subtasks WHERE id = :id") suspend fun removeSubtask(id: Long)
+    @Query("UPDATE subtasks SET position = :position WHERE id = :id") suspend fun setSubtaskPosition(id: Long, position: Int)
+    @Query("SELECT s.plannerItemId, COUNT(*) AS total, SUM(s.isCompleted) AS done FROM subtasks s JOIN planner_items p ON p.id = s.plannerItemId WHERE p.date = :date GROUP BY s.plannerItemId")
+    fun observeSubtaskProgress(date: LocalDate): Flow<List<SubtaskProgress>>
+    @Transaction suspend fun moveSubtask(parentId: Long, id: Long, amount: Int) {
+        val rows = subtaskRows(parentId)
+        val index = rows.indexOfFirst { it.id == id }
+        val other = index + amount
+        if (index >= 0 && other in rows.indices) {
+            setSubtaskPosition(id, rows[other].position)
+            setSubtaskPosition(rows[other].id, rows[index].position)
+        }
+    }
 
     @Insert suspend fun insert(item: PlannerItemEntity): Long
     @Update suspend fun update(item: PlannerItemEntity): Int

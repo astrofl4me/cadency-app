@@ -20,6 +20,7 @@ data class DailyUiState(
     val date: LocalDate = LocalDate.now(), val today: LocalDate = LocalDate.now(),
     val items: List<PlannerItem> = emptyList(), val tomorrowItems: List<PlannerItem> = emptyList(),
     val note: PlannerNote = PlannerNote(""), val loading: Boolean = true, val hasError: Boolean = false,
+    val stepProgress: Map<Long, SubtaskProgress> = emptyMap(),
 )
 data class WeeklyUiState(
     val interval: DateInterval = PlannerDates.week(LocalDate.now()), val today: LocalDate = LocalDate.now(),
@@ -46,8 +47,10 @@ class PlannerViewModel(private val repository: PlannerRepository, private val sa
 
     val daily = combine(day, today, retry) { date, current, _ -> LocalDate.parse(date) to current }
         .flatMapLatest { (date, current) ->
-            combine(repository.observeDay(date), repository.observeDay(date.plusDays(1)), repository.observeNote("day:$date")) { items, next, note ->
-                DailyUiState(date, current, items, next.filterNot { it.isCompleted }, note, loading = false)
+            combine(repository.observeDay(date), repository.observeDay(date.plusDays(1)), repository.observeNote("day:$date"),
+                repository.observeSubtaskProgress(date)) { items, next, note, steps ->
+                DailyUiState(date, current, items, next.filterNot { it.isCompleted }, note, loading = false,
+                    stepProgress = steps.associateBy { it.plannerItemId })
             }.onStart { emit(DailyUiState(date, current)) }
                 .catch { emit(DailyUiState(date, current, loading = false, hasError = true)) }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DailyUiState(today.value, today.value))

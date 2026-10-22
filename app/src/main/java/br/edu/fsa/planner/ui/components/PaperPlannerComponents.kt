@@ -18,6 +18,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.PlannerItem
+import br.edu.fsa.planner.domain.model.SubtaskProgress
 import br.edu.fsa.planner.ui.theme.PlannerPaper as Paper
 import br.edu.fsa.planner.ui.theme.PlannerDimens as D
 
@@ -74,7 +75,7 @@ fun PaperRules(count: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun PaperItemRow(item: PlannerItem, onToggle: () -> Unit, onEdit: () -> Unit) {
+fun PaperItemRow(item: PlannerItem, onToggle: () -> Unit, onEdit: () -> Unit, progress: SubtaskProgress? = null) {
     val description = stringResource(if (item.isCompleted) R.string.reopen_item else R.string.complete_item, item.title)
     Row(Modifier.fillMaxWidth().heightIn(min = D.Touch)
         .clickable(onClickLabel = stringResource(R.string.edit_item), onClick = onEdit),
@@ -84,6 +85,8 @@ fun PaperItemRow(item: PlannerItem, onToggle: () -> Unit, onEdit: () -> Unit) {
         Column(Modifier.weight(1f).padding(vertical = D.Small)) {
             Text(item.title, style = Paper.Body, color = if (item.isCompleted) Paper.Muted else Paper.Ink,
                 textDecoration = if (item.isCompleted) TextDecoration.LineThrough else TextDecoration.None)
+            if (progress != null && progress.total > 0) Text(stringResource(R.string.subtask_progress, progress.done, progress.total),
+                style = Paper.Caption, color = Paper.Muted)
             item.startTime?.let { Text(if (item.endTime != null) "$it – ${item.endTime}" else it.toString(),
                 style = Paper.Caption, color = Paper.Muted) }
         }
@@ -94,11 +97,11 @@ fun PaperItemRow(item: PlannerItem, onToggle: () -> Unit, onEdit: () -> Unit) {
 @Composable
 fun PaperItemSection(title: String, items: List<PlannerItem>, shaded: Boolean = false, minimumRows: Int = 3,
                      emptyMessage: String? = null, onAdd: () -> Unit, onToggle: (PlannerItem) -> Unit,
-                     onEdit: (PlannerItem) -> Unit) {
+                     onEdit: (PlannerItem) -> Unit, progress: Map<Long, SubtaskProgress> = emptyMap()) {
     Column(Modifier.fillMaxWidth().clip(Paper.Shape)
         .background(if (shaded) Paper.Panel else Paper.Background).padding(horizontal = D.Medium, vertical = D.Tiny)) {
         PaperSectionHeading(title, onAdd)
-        items.forEach { item -> PaperItemRow(item, { onToggle(item) }, { onEdit(item) }) }
+        items.forEach { item -> PaperItemRow(item, { onToggle(item) }, { onEdit(item) }, progress[item.id]) }
         if (items.isEmpty()) {
             Row(Modifier.fillMaxWidth().heightIn(min = D.Touch).clickable(onClick = onAdd),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(D.Medium)) {

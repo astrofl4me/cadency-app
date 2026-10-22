@@ -8,6 +8,12 @@ import java.time.LocalDate
 
 class CadencyRulesTest {
     private val monday = LocalDate.of(2026, 10, 19)
+    @Test fun subtaskProgressHandlesEmptyPartialAndCompleteLists() {
+        assertEquals(0f, SubtaskProgress(1, 0, 0).fraction)
+        assertFalse(SubtaskProgress(1, 0, 0).allComplete)
+        assertEquals(0.5f, SubtaskProgress(1, 4, 2).fraction)
+        assertTrue(SubtaskProgress(1, 4, 4).allComplete)
+    }
     @Test fun dailyHabitCountsOnlyPlannedDays() {
         val habit = Habit(id = 1, name = "Ler", startsOn = monday,
             days = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY))

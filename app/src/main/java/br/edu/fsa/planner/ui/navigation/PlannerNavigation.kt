@@ -15,6 +15,8 @@ import br.edu.fsa.planner.ui.components.CadencyTopBar
 import br.edu.fsa.planner.ui.screens.habits.*
 import br.edu.fsa.planner.viewmodel.HabitsViewModel
 import br.edu.fsa.planner.viewmodel.HabitEditorViewModel
+import br.edu.fsa.planner.viewmodel.TaskDetailsViewModel
+import br.edu.fsa.planner.ui.screens.details.TaskDetailsScreen
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -89,7 +91,7 @@ fun PlannerNavigation(container: AppContainer) {
             while (isActive) { planner.refreshToday(); habits.refreshToday(); delay(60_000) }
         }
     }
-    fun addItem(date: LocalDate, type: ItemType) { navController.navigate("editor?date=$date&type=${type.name}") }
+    fun addItem(date: LocalDate, type: ItemType) { navController.navigate("taskEditor?date=$date&type=${type.name}") }
     LaunchedEffect(planner, resources) {
         planner.notices.collect { notice ->
             val message = when (notice) {
@@ -155,6 +157,17 @@ fun PlannerNavigation(container: AppContainer) {
                 session.user?.let { SettingsScreen(it, login.busy, login.error != null || settingsError,
                     auth::signOut, preferences, settings::setTheme, settings::setMood, settings::setRollover) }
             }
+            composable("taskDetails/{itemId}", arguments = listOf(navArgument("itemId") { type = NavType.LongType })) {
+                val details: TaskDetailsViewModel = viewModel(factory = viewModelFactory { initializer { TaskDetailsViewModel(container.plannerRepository, createSavedStateHandle()) } })
+                val state by details.state.collectAsStateWithLifecycle()
+                val draft by details.draft.collectAsStateWithLifecycle()
+                LaunchedEffect(state.loading, state.item, state.error) {
+                    if (!state.loading && state.item == null && !state.error) navController.popBackStack()
+                }
+                TaskDetailsScreen(state, draft, details::updateDraft, details::addStep, details::toggleStep,
+                    details::removeStep, details::move, details::toggleParent, details::dismissCompletion,
+                    { navController.navigate("taskEditor?itemId=${state.item?.id ?: 0}") }, { navController.popBackStack() })
+            }
             composable("habitEditor?habitId={habitId}", arguments = listOf(navArgument("habitId") { type = NavType.LongType; defaultValue = 0L })) {
                 val editor: HabitEditorViewModel = viewModel(factory = viewModelFactory { initializer { HabitEditorViewModel(container.habitRepository, createSavedStateHandle()) } })
                 val state by editor.state.collectAsStateWithLifecycle()
@@ -162,7 +175,7 @@ fun PlannerNavigation(container: AppContainer) {
                 LaunchedEffect(state.finished) { if (state.finished) navController.popBackStack() }
                 HabitEditorScreen(state, history, editor::update, editor::save, editor::delete) { navController.popBackStack() }
             }
-            composable("editor?itemId={itemId}&date={date}&type={type}", arguments = listOf(
+            composable("taskEditor?itemId={itemId}&date={date}&type={type}", arguments = listOf(
                 navArgument("itemId") { type = NavType.LongType; defaultValue = 0L },
                 navArgument("date") { type = NavType.StringType; defaultValue = LocalDate.now().toString() },
                 navArgument("type") { type = NavType.StringType; defaultValue = "TASK" },
@@ -184,12 +197,12 @@ fun PlannerNavigation(container: AppContainer) {
                     if (tab.route == "daily") {
                         val state by planner.daily.collectAsStateWithLifecycle()
                         DailyScreen(state, { planner.moveDay(-1) }, { planner.moveDay(1) }, planner::goToday,
-                            ::addItem, { navController.navigate("editor?itemId=${it.id}") }, planner::toggle,
+                            ::addItem, { navController.navigate("taskDetails/${it.id}") }, planner::toggle,
                             planner::setMood, planner::saveDailyReflection, planner::setWaterGlasses, planner::retryData)
                     } else if (tab.route == "weekly") {
                         val state by planner.weekly.collectAsStateWithLifecycle()
                         WeeklyScreen(state, { planner.moveWeek(-1) }, { planner.moveWeek(1) }, planner::goCurrentWeek,
-                            ::addItem, { navController.navigate("editor?itemId=${it.id}") }, planner::toggle,
+                            ::addItem, { navController.navigate("taskDetails/${it.id}") }, planner::toggle,
                             { planner.selectDay(it); navController.navigate("daily") { popUpTo("daily"); launchSingleTop = true } },
                             planner::saveWeeklyNote, planner::saveHabit, planner::toggleHabit, planner::deleteHabit, planner::retryData)
                     } else if (tab.route == "monthly") {
@@ -197,7 +210,7 @@ fun PlannerNavigation(container: AppContainer) {
                         MonthlyScreen(state, { planner.moveMonth(-1) }, { planner.moveMonth(1) }, planner::goCurrentMonth,
                             planner::selectCalendarDay,
                             { planner.selectDay(it); navController.navigate("daily") { popUpTo("daily"); launchSingleTop = true } },
-                            ::addItem, { navController.navigate("editor?itemId=${it.id}") }, planner::toggle, planner::retryData)
+                            ::addItem, { navController.navigate("taskDetails/${it.id}") }, planner::toggle, planner::retryData)
                     } else {
                         val state by habits.state.collectAsStateWithLifecycle()
                         HabitsScreen(state, { navController.navigate("habitEditor") },
