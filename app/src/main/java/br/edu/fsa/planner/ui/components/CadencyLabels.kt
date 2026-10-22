@@ -14,3 +14,8 @@ fun PlannerMood.description() = when (this) {
     PlannerMood.COZY -> R.string.style_cozy_hint; PlannerMood.SOFT -> R.string.style_soft_hint
     PlannerMood.CLEAN -> R.string.style_clean_hint; PlannerMood.FOCUS -> R.string.style_focus_hint
 }
+fun HabitIcon.label() = when (this) {
+    HabitIcon.WATER -> R.string.habit_icon_water; HabitIcon.BOOK -> R.string.habit_icon_book
+    HabitIcon.HEALTH -> R.string.habit_icon_health; HabitIcon.STUDY -> R.string.habit_icon_study
+    HabitIcon.CALM -> R.string.habit_icon_calm; HabitIcon.CHECK -> R.string.habit_icon_check
+}

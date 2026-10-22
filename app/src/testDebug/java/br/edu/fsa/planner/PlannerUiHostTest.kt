@@ -126,7 +126,7 @@ class PlannerUiHostTest {
         compose.onNodeWithContentDescription("Excluir plano").performClick()
         compose.onNodeWithText("Excluir", useUnmergedTree = true).performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Revisar circuitos").fetchSemanticsNodes().isEmpty() }
-        compose.onNodeWithText("Perfil").performClick()
+        compose.onNodeWithContentDescription("Configurações").performClick()
         waitFor("Do seu jeito")
         screenshot("profile")
         compose.onNodeWithText("Sair da conta").performScrollTo().performSemanticsAction(SemanticsActions.OnClick) { it() }

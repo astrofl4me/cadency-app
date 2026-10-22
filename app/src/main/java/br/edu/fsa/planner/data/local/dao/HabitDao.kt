@@ -8,10 +8,10 @@ import java.time.LocalDate
 @Dao
 interface HabitDao {
     @Query("SELECT * FROM habits ORDER BY position, id") fun observeAll(): Flow<List<HabitEntity>>
-    @Query("SELECT * FROM habits WHERE id = :id") suspend fun get(id: Long): HabitEntity?
-    @Insert suspend fun insert(habit: HabitEntity): Long
-    @Update suspend fun update(habit: HabitEntity): Int
-    @Query("DELETE FROM habits WHERE id = :id") suspend fun delete(id: Long)
+    @Query("SELECT * FROM habits WHERE id = :id") suspend fun findHabit(id: Long): HabitEntity?
+    @Insert suspend fun addHabit(habit: HabitEntity): Long
+    @Update suspend fun editHabit(habit: HabitEntity): Int
+    @Query("DELETE FROM habits WHERE id = :id") suspend fun removeHabit(id: Long)
     @Query("SELECT * FROM habit_check_ins WHERE date BETWEEN :start AND :end AND completed = 1")
     fun observeCheckIns(start: LocalDate, end: LocalDate): Flow<List<HabitCheckInEntity>>
     @Query("SELECT * FROM habit_check_ins WHERE habitId = :id ORDER BY date DESC")

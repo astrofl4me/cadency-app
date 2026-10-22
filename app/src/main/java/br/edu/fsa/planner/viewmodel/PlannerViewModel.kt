@@ -125,7 +125,7 @@ class PlannerViewModel(private val repository: PlannerRepository, private val sa
         }
     }
     fun saveHabit(habit: WeeklyHabit) { mutate(PlannerNotice.NOTE_SAVED) { repository.saveHabit(habit) } }
-    fun toggleHabit(habit: WeeklyHabit, day: DayOfWeek) { mutate(null) { repository.toggleHabit(habit.id, day) } }
+    fun toggleHabit(habit: WeeklyHabit, day: DayOfWeek) { mutate(null) { repository.toggleHabit(habit.id, day, habit.weekStart) } }
     fun deleteHabit(habit: WeeklyHabit) { mutate(PlannerNotice.NOTE_SAVED) { repository.deleteHabit(habit.id) } }
     fun editorFinished(result: EditorResult) { viewModelScope.launch { noticeChannel.send(if (result == EditorResult.SAVED) PlannerNotice.SAVED else PlannerNotice.DELETED) } }
 

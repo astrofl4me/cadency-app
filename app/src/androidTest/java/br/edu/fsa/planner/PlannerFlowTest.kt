@@ -113,7 +113,7 @@ class PlannerFlowTest {
         compose.onNodeWithText("4 de 8").assertExists()
         compose.onNodeWithTag("planner-paper-page").performScrollToNode(hasText("Aprender algo novo"))
         compose.onNodeWithText("Aprender algo novo").assertExists()
-        compose.onNodeWithText("Perfil").performClick()
+        compose.onNodeWithContentDescription("Configurações").performClick()
         compose.onNodeWithText("Sair da conta").performScrollTo()
             .performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitFor("Experimentar com conta demo")

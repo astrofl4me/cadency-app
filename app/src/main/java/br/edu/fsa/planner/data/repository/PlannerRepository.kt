@@ -13,7 +13,8 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 
-class PlannerRepository(private val dao: PlannerDao, private val clock: Clock = Clock.systemDefaultZone()) {
+class PlannerRepository(private val dao: PlannerDao, private val clock: Clock = Clock.systemDefaultZone(),
+                        private val habits: HabitRepository = HabitRepository(dao, clock)) {
     private val noteMutex = Mutex()
     private val habitMutex = Mutex()
     fun observeDay(date: LocalDate) = dao.observeDay(date).map { rows -> rows.map { it.toModel() } }
@@ -44,20 +45,13 @@ class PlannerRepository(private val dao: PlannerDao, private val clock: Clock = 
         }
     }
 
-    fun observeHabits(weekStart: LocalDate) = dao.observeHabits(weekStart).map { rows -> rows.map { it.toModel() } }
+    fun observeHabits(weekStart: LocalDate) = habits.weekly(weekStart)
     suspend fun saveHabit(habit: WeeklyHabit): Long {
-        val title = habit.title.trim()
-        require(title.isNotEmpty() && title.length <= PlannerJournal.HabitTitleLimit)
-        val normalized = habit.copy(title = title, weekStart = PlannerDates.week(habit.weekStart).start)
-        return if (habit.id == 0L) dao.insertHabit(normalized.toEntity())
-        else { check(dao.updateHabit(normalized.toEntity()) == 1); habit.id }
+        return habits.saveWeekly(habit.copy(weekStart = PlannerDates.week(habit.weekStart).start))
     }
-    suspend fun toggleHabit(id: Long, day: DayOfWeek) {
-        habitMutex.withLock {
-            val habit = checkNotNull(dao.getHabit(id)).toModel()
-            val days = if (day in habit.completedDays) habit.completedDays - day else habit.completedDays + day
-            check(dao.updateHabit(habit.copy(completedDays = days).toEntity()) == 1)
-        }
+    suspend fun toggleHabit(id: Long, day: DayOfWeek, weekStart: LocalDate? = null) {
+        val start = weekStart ?: PlannerDates.week(checkNotNull(habits.get(id)).startsOn).start
+        habits.toggle(id, start.plusDays((day.value - 1).toLong()))
     }
-    suspend fun deleteHabit(id: Long) = dao.deleteHabit(id)
+    suspend fun deleteHabit(id: Long) = habits.delete(id)
 }

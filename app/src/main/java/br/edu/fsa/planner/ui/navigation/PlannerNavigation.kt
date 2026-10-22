@@ -10,6 +10,11 @@ import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.CheckCircleOutline
+import br.edu.fsa.planner.ui.components.CadencyTopBar
+import br.edu.fsa.planner.ui.screens.habits.*
+import br.edu.fsa.planner.viewmodel.HabitsViewModel
+import br.edu.fsa.planner.viewmodel.HabitEditorViewModel
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -58,11 +63,13 @@ private val tabs = listOf(
     PlannerTab("daily", R.string.tab_today, Icons.Outlined.Today),
     PlannerTab("weekly", R.string.tab_week, Icons.Outlined.DateRange),
     PlannerTab("monthly", R.string.tab_month, Icons.Outlined.CalendarMonth),
-    PlannerTab("settings", R.string.tab_settings, Icons.Outlined.Settings),
+    PlannerTab("habits", R.string.tab_habits, Icons.Outlined.CheckCircleOutline),
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlannerNavigation(container: AppContainer) {
+    val habits: HabitsViewModel = viewModel(factory = viewModelFactory { initializer { HabitsViewModel(container.habitRepository, createSavedStateHandle()) } })
     val settings: SettingsViewModel = viewModel(factory = viewModelFactory { initializer { SettingsViewModel(container.preferencesRepository) } })
     val preferences by settings.preferences.collectAsStateWithLifecycle()
     val settingsError by settings.writeError.collectAsStateWithLifecycle()
@@ -79,7 +86,7 @@ fun PlannerNavigation(container: AppContainer) {
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(lifecycleOwner, planner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            while (isActive) { planner.refreshToday(); delay(60_000) }
+            while (isActive) { planner.refreshToday(); habits.refreshToday(); delay(60_000) }
         }
     }
     fun addItem(date: LocalDate, type: ItemType) { navController.navigate("editor?date=$date&type=${type.name}") }
@@ -103,7 +110,13 @@ fun PlannerNavigation(container: AppContainer) {
             }
         }
     }
-    Scaffold(snackbarHost = { SnackbarHost(snackbar) }, floatingActionButton = {
+    Scaffold(topBar = {
+        if (session.user != null && tabs.any { it.route == entry?.destination?.route }) {
+            TopAppBar(title = { Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleMedium) }, actions = {
+                IconButton(onClick = { navController.navigate("settings") }) { Icon(Icons.Outlined.Settings, stringResource(R.string.open_settings)) }
+            })
+        } else if (entry?.destination?.route == "settings") CadencyTopBar(stringResource(R.string.open_settings)) { navController.popBackStack() }
+    }, snackbarHost = { SnackbarHost(snackbar) }, floatingActionButton = {
         if (session.user != null && entry?.destination?.route in listOf("daily", "weekly", "monthly")) {
             FloatingActionButton(onClick = { addItem(when (entry?.destination?.route) {
                 "weekly" -> planner.weekAddDate(); "monthly" -> planner.monthAddDate(); else -> planner.currentDay()
@@ -137,6 +150,17 @@ fun PlannerNavigation(container: AppContainer) {
             composable("login") {
                 LoginScreen(login, auth::emailChanged, auth::passwordChanged, auth::togglePassword,
                     { auth.signIn() }, { auth.signIn(demo = true) })
+            }
+            composable("settings") {
+                session.user?.let { SettingsScreen(it, login.busy, login.error != null || settingsError,
+                    auth::signOut, preferences, settings::setTheme, settings::setMood, settings::setRollover) }
+            }
+            composable("habitEditor?habitId={habitId}", arguments = listOf(navArgument("habitId") { type = NavType.LongType; defaultValue = 0L })) {
+                val editor: HabitEditorViewModel = viewModel(factory = viewModelFactory { initializer { HabitEditorViewModel(container.habitRepository, createSavedStateHandle()) } })
+                val state by editor.state.collectAsStateWithLifecycle()
+                val history by editor.history.collectAsStateWithLifecycle()
+                LaunchedEffect(state.finished) { if (state.finished) navController.popBackStack() }
+                HabitEditorScreen(state, history, editor::update, editor::save, editor::delete) { navController.popBackStack() }
             }
             composable("editor?itemId={itemId}&date={date}&type={type}", arguments = listOf(
                 navArgument("itemId") { type = NavType.LongType; defaultValue = 0L },
@@ -175,8 +199,10 @@ fun PlannerNavigation(container: AppContainer) {
                             { planner.selectDay(it); navController.navigate("daily") { popUpTo("daily"); launchSingleTop = true } },
                             ::addItem, { navController.navigate("editor?itemId=${it.id}") }, planner::toggle, planner::retryData)
                     } else {
-                        session.user?.let { SettingsScreen(it, login.busy, login.error != null || settingsError,
-                            auth::signOut, preferences, settings::setTheme, settings::setMood, settings::setRollover) }
+                        val state by habits.state.collectAsStateWithLifecycle()
+                        HabitsScreen(state, { navController.navigate("habitEditor") },
+                            { navController.navigate("habitEditor?habitId=${it.id}") }, habits::toggle,
+                            { habits.moveWeek(-1) }, { habits.moveWeek(1) }, habits::currentWeek, habits::showArchived)
                     }
                 }
             }

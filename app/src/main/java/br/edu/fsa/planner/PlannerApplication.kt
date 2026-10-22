@@ -10,6 +10,7 @@ import br.edu.fsa.planner.data.repository.PlannerRepository
 import br.edu.fsa.planner.data.repository.AuthRepository
 import br.edu.fsa.planner.data.repository.LocalAuthRepository
 import br.edu.fsa.planner.data.repository.PreferencesRepository
+import br.edu.fsa.planner.data.repository.HabitRepository
 
 private val Context.sessionDataStore by preferencesDataStore(name = "planner_preferences")
 
@@ -23,5 +24,6 @@ class AppContainer(context: Context, val authRepository: AuthRepository = LocalA
         Room.databaseBuilder(context.applicationContext, PlannerDatabase::class.java, "planner.db")
             .addMigrations(PlannerDatabase.Migration1To2, Migration2To3).build()
     }
-    val plannerRepository by lazy { PlannerRepository(database.plannerDao()) }
+    val habitRepository by lazy { HabitRepository(database.habitDao()) }
+    val plannerRepository by lazy { PlannerRepository(database.plannerDao(), habits = habitRepository) }
 }
