@@ -9,7 +9,8 @@ import java.time.LocalDate
 
 data class HabitsState(val today: LocalDate = LocalDate.now(), val week: DateInterval = PlannerDates.week(LocalDate.now()),
     val habits: List<Habit> = emptyList(), val checks: List<HabitCheckIn> = emptyList(),
-    val loading: Boolean = true, val error: Boolean = false, val archived: Boolean = false)
+    val loading: Boolean = true, val error: Boolean = false, val archived: Boolean = false,
+    val map: List<HeatmapDay> = emptyList(), val miniMaps: Map<Long, List<HeatmapDay>> = emptyMap())
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HabitsViewModel(private val repository: HabitRepository, private val saved: SavedStateHandle) : ViewModel() {
@@ -20,7 +21,9 @@ class HabitsViewModel(private val repository: HabitRepository, private val saved
     val state = combine(day, week, archived) { today, value, show -> Triple(today, PlannerDates.week(LocalDate.parse(value)), show) }
         .flatMapLatest { (today, interval, show) ->
             combine(repository.habits, repository.checkIns(DateInterval(minOf(today.minusDays(365), interval.start), maxOf(today, interval.endInclusive))), error) { habits, checks, failed ->
-                HabitsState(today, interval, habits.filter { (it.isArchived || (it.endsOn != null && it.endsOn < today)) == show }, checks, false, failed, show)
+                HabitsState(today, interval, habits.filter { (it.isArchived || (it.endsOn != null && it.endsOn < today)) == show }, checks, false, failed, show,
+                    HeatmapRules.days(habits, checks, HeatmapRules.interval(today, 12), today),
+                    habits.associate { it.id to HeatmapRules.days(listOf(it), checks, HeatmapRules.interval(today, 4), today) })
             }.catch { emit(HabitsState(today, interval, loading = false, error = true)) }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HabitsState())
     fun refreshToday() { day.value = LocalDate.now() }

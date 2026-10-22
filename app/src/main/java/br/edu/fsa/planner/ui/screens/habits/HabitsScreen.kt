@@ -39,6 +39,14 @@ fun HabitsScreen(state: HabitsState, onAdd: () -> Unit, onEdit: (Habit) -> Unit,
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(D.Page), verticalArrangement = Arrangement.spacedBy(D.Large)) {
         item {
             PlannerHeader(stringResource(R.string.habits_eyebrow), stringResource(R.string.tab_habits), stringResource(R.string.habits_subtitle))
+        }
+        item {
+            SectionTitle(stringResource(R.string.heatmap_title))
+            Text(stringResource(R.string.heatmap_subtitle), style = MaterialTheme.typography.bodyMedium)
+            CadencyHeatmap(state.map)
+            Text(stringResource(R.string.heatmap_flexible_hint), style = MaterialTheme.typography.bodySmall)
+        }
+        item {
             DateNavigator(stringResource(R.string.previous_week), stringResource(R.string.next_week), stringResource(R.string.current_week), onPrevious, onNext, onCurrent)
             Text(stringResource(R.string.week_interval, state.week.start.shortLabel(), state.week.endInclusive.shortLabel(), state.week.endInclusive.year.toString()),
                 style = MaterialTheme.typography.bodySmall)
@@ -78,6 +86,7 @@ fun HabitsScreen(state: HabitsState, onAdd: () -> Unit, onEdit: (Habit) -> Unit,
                     }
                 }
                 val weekDone = state.checks.count { it.habitId == habit.id && it.date in state.week }
+                CadencyHeatmap(state.miniMaps[habit.id].orEmpty(), mini = true)
                 val weekGoal = HabitRules.opportunities(habit, state.week)
                 Text(stringResource(R.string.habit_week_summary, weekDone, weekGoal), style = MaterialTheme.typography.bodySmall)
                 val checkedToday = state.checks.any { it.habitId == habit.id && it.date == state.today }

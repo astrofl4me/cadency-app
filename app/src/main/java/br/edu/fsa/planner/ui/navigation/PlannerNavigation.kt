@@ -15,6 +15,7 @@ import br.edu.fsa.planner.ui.components.CadencyTopBar
 import br.edu.fsa.planner.ui.screens.habits.*
 import br.edu.fsa.planner.viewmodel.HabitsViewModel
 import br.edu.fsa.planner.viewmodel.HabitEditorViewModel
+import br.edu.fsa.planner.viewmodel.HabitDetailsViewModel
 import br.edu.fsa.planner.viewmodel.TaskDetailsViewModel
 import br.edu.fsa.planner.ui.screens.details.TaskDetailsScreen
 import androidx.compose.material3.*
@@ -215,6 +216,12 @@ fun PlannerNavigation(container: AppContainer) {
                     { navController.navigate("taskEditor?itemId=${state.item?.id ?: 0}") }, { navController.popBackStack() },
                     { navController.navigate("focusFlow?itemId=${state.item?.id ?: 0}") })
             }
+            composable("habitDetails/{habitId}", arguments = listOf(navArgument("habitId") { type = NavType.LongType })) {
+                val details: HabitDetailsViewModel = viewModel(factory = viewModelFactory { initializer { HabitDetailsViewModel(container.habitRepository, createSavedStateHandle()) } })
+                val state by details.state.collectAsStateWithLifecycle()
+                LaunchedEffect(state.loading, state.habit) { if (!state.loading && state.habit == null && !state.error) navController.popBackStack() }
+                HabitDetailsScreen(state, details::selectWeeks, { navController.navigate("habitEditor?habitId=${state.habit?.id ?: 0}") }, { navController.popBackStack() })
+            }
             composable("habitEditor?habitId={habitId}", arguments = listOf(navArgument("habitId") { type = NavType.LongType; defaultValue = 0L })) {
                 val editor: HabitEditorViewModel = viewModel(factory = viewModelFactory { initializer { HabitEditorViewModel(container.habitRepository, createSavedStateHandle()) } })
                 val state by editor.state.collectAsStateWithLifecycle()
@@ -265,7 +272,7 @@ fun PlannerNavigation(container: AppContainer) {
                     } else if (tab.route == "habits") {
                         val state by habits.state.collectAsStateWithLifecycle()
                         HabitsScreen(state, { navController.navigate("habitEditor") },
-                            { navController.navigate("habitEditor?habitId=${it.id}") }, habits::toggle,
+                            { navController.navigate("habitDetails/${it.id}") }, habits::toggle,
                             { habits.moveWeek(-1) }, { habits.moveWeek(1) }, habits::currentWeek, habits::showArchived)
                     } else {
                         val progress: ProgressViewModel = viewModel(factory = viewModelFactory {

@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="heatmap_title">Mapa do seu ritmo</string>
+    <string name="heatmap_subtitle">Um pouco de cada vez também conta.</string>
+    <string name="heatmap_previous">Dia anterior</string>
+    <string name="heatmap_next">Dia seguinte</string>
+    <string name="heatmap_legend">– sem previsão · ○ previsto · ✓ realizado · contorno: dia selecionado</string>
+    <string name="heatmap_future">Dia futuro.</string>
+    <string name="heatmap_not_planned">Nenhum hábito planejado para este dia.</string>
+    <string name="heatmap_flexible">Meta semanal flexível, sem obrigação neste dia.</string>
+    <string name="heatmap_result">%1$d de %2$d hábitos realizados · %3$d%%</string>
+    <string name="heatmap_flexible_hint">Metas semanais entram no mapa nos dias com check-in; os demais dias ficam neutros.</string>
+    <string name="habit_details">Seu hábito</string>
+    <string name="habit_focus">Focar neste hábito</string>
+    <string name="period_three_months">3 meses</string>
+    <string name="period_six_months">6 meses</string>
+    <string name="period_year">1 ano</string>
+    <string name="habit_recent_stats">Seu ritmo recente</string>
+    <string name="habit_consistency_value">Consistência no período: %1$d%%</string>
+    <string name="habit_streak_days">Sequência atual: %1$d dias previstos</string>
+    <string name="habit_history_count">%1$d check-ins no histórico</string>
+    <string name="habit_first_day">Esse ritmo começou em %1$s.</string>
     <string name="personality_title">Personalidade</string>
     <string name="preview_today">Seu dia, com calma</string>
     <string name="preview_task">Um pequeno passo</string>
