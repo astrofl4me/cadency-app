@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import br.edu.fsa.planner.ui.theme.LocalCadencyPersonality
 import br.edu.fsa.planner.ui.theme.PlannerDimens as D
@@ -41,7 +42,7 @@ fun CadencyCheckbox(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, mod
     if (!LocalCadencyPersonality.current.roundCheckbox) {
         Checkbox(checked, onCheckedChange, modifier, enabled, colors = colors)
     } else {
-        Box(modifier.size(D.Touch).then(if (onCheckedChange != null) Modifier.toggleable(checked, enabled = enabled, role = Role.Checkbox,
+        Box(modifier.size(D.Touch).alpha(if (enabled) 1f else 0.38f).then(if (onCheckedChange != null) Modifier.toggleable(checked, enabled = enabled, role = Role.Checkbox,
             onValueChange = onCheckedChange) else Modifier), contentAlignment = Alignment.Center) {
             Surface(Modifier.size(D.Page), shape = CircleShape,
                 color = if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,

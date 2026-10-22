@@ -44,7 +44,7 @@ fun TaskDetailsScreen(state: TaskDetailsState, draft: String, onDraft: (String) 
                 }
                 item {
                     SectionTitle(stringResource(R.string.subtasks_title))
-                    Text(stringResource(R.string.subtask_progress, state.steps.count { it.isCompleted }, state.steps.size), style = MaterialTheme.typography.bodySmall)
+                    Text(countedString(R.plurals.subtask_progress, state.steps.size, state.steps.count { it.isCompleted }, state.steps.size), style = MaterialTheme.typography.bodySmall)
                     if (state.steps.isEmpty()) Text(stringResource(R.string.subtasks_hint), style = MaterialTheme.typography.bodyMedium)
                 }
                 items(state.steps, key = { it.id }) { step ->

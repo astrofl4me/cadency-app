@@ -14,6 +14,7 @@ import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.PlannerItem
 import br.edu.fsa.planner.ui.components.*
 import br.edu.fsa.planner.ui.theme.PlannerDimens as D
+import br.edu.fsa.planner.ui.theme.LocalCadencyPersonality
 import br.edu.fsa.planner.viewmodel.NowState
 import java.time.format.DateTimeFormatter
 
@@ -25,7 +26,8 @@ fun NowModeScreen(state: NowState, onComplete: () -> Unit, onSkip: () -> Unit, o
             verticalArrangement = Arrangement.spacedBy(D.Section)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(stringResource(R.string.now_eyebrow), style = MaterialTheme.typography.labelLarge)
-                Text(state.now.format(DateTimeFormatter.ofPattern("HH:mm")), style = MaterialTheme.typography.headlineMedium)
+                Text(state.now.format(DateTimeFormatter.ofPattern("HH:mm")), style = LocalCadencyPersonality.current.timer.copy(
+                    fontSize = MaterialTheme.typography.headlineMedium.fontSize, lineHeight = MaterialTheme.typography.headlineMedium.lineHeight))
             }
             Text(stringResource(when (state.now.hour) { in 5..11 -> R.string.good_morning; in 12..17 -> R.string.good_afternoon; else -> R.string.good_evening }),
                 style = MaterialTheme.typography.titleMedium)

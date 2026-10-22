@@ -59,7 +59,7 @@ fun DailyScreen(state: DailyUiState, onPrevious: () -> Unit, onNext: () -> Unit,
                         }
                     }
                 }
-                if (pendingCount > 0 && onReview != null) TextButton(onClick = onReview) { Text(stringResource(R.string.rollover_review_count, pendingCount)) }
+                if (pendingCount > 0 && onReview != null) TextButton(onClick = onReview) { Text(countedString(R.plurals.rollover_review_count, pendingCount, pendingCount)) }
                 if (onInbox != null) TextButton(onClick = onInbox) { Text(stringResource(R.string.inbox_count, inboxCount)) }
                 if (onNow != null && !visual.prioritizeNow) OutlinedButton(onClick = onNow, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.enter_now))
@@ -69,7 +69,6 @@ fun DailyScreen(state: DailyUiState, onPrevious: () -> Unit, onNext: () -> Unit,
             if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             else if (state.hasError) item { DataError(onRetry) }
             else {
-                if (!visual.prioritizeNow) item { quoteContent() }
                 item {
                     PaperColumns(primary = {
                         PaperItemSection(stringResource(R.string.priorities), priorities, shaded = true,
@@ -83,12 +82,20 @@ fun DailyScreen(state: DailyUiState, onPrevious: () -> Unit, onNext: () -> Unit,
                             Text(stringResource(R.string.add_first), color = Paper.Ink)
                         }
                     }, secondary = {
+                        if (!visual.prioritizeNow) { quoteContent(); Spacer(Modifier.height(D.Large)) }
+                        if (visual.quietNavigation) OutlinedButton(onClick = { journalVisible = !journalVisible }) {
+                            Text(stringResource(R.string.focus_care_controls))
+                        }
+                        AnimatedVisibility(!visual.quietNavigation || journalVisible, enter = fadeIn(tween(visual.motionMillis)), exit = fadeOut(tween(visual.motionMillis))) {
+                        Column {
                         PaperMoodSelector(state.note.mood, onMood)
                         Spacer(Modifier.height(D.Large))
                         PaperWaterTracker(state.note.waterGlasses, onWater)
                         Spacer(Modifier.height(D.Large))
                         PaperNoteArea(stringResource(R.string.paper_self_care), state.note.selfCare,
                             stringResource(R.string.paper_self_care_hint), { editing = DailyNoteField.SELF_CARE })
+                        }
+                        }
                     })
                 }
                 item {

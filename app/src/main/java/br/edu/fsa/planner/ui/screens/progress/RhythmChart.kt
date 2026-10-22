@@ -18,6 +18,7 @@ import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.DailyCount
 import br.edu.fsa.planner.ui.components.*
 import br.edu.fsa.planner.ui.theme.PlannerDimens as D
+import br.edu.fsa.planner.ui.theme.LocalCadencyPersonality
 
 @Composable
 fun RhythmChart(title: String, values: List<DailyCount>) {
@@ -26,6 +27,7 @@ fun RhythmChart(title: String, values: List<DailyCount>) {
     val current = values[selected.coerceIn(values.indices)]
     val color = MaterialTheme.colorScheme.primary
     val baseline = MaterialTheme.colorScheme.outlineVariant
+    val corners = LocalCadencyPersonality.current.heatmapRadius
     val description = stringResource(R.string.chart_description, title,
         values.joinToString("; ") { "${it.date.shortLabel()}: ${it.value}" })
     Column(verticalArrangement = Arrangement.spacedBy(D.Medium)) {
@@ -39,7 +41,7 @@ fun RhythmChart(title: String, values: List<DailyCount>) {
             values.forEachIndexed { index, entry ->
                 val height = size.height * (entry.value.toFloat() / maximum)
                 drawRoundRect(color.copy(alpha = if (index == selected) 1f else 0.5f),
-                    Offset(slot * index + slot * 0.18f, size.height - height), Size(slot * 0.64f, height), CornerRadius(D.Tiny.toPx()))
+                    Offset(slot * index + slot * 0.18f, size.height - height), Size(slot * 0.64f, height), CornerRadius(corners.toPx()))
             }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

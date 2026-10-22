@@ -1,6 +1,8 @@
 package br.edu.fsa.planner.ui.screens.quotes
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
@@ -57,7 +59,7 @@ private fun OwnQuoteDialog(onDismiss: () -> Unit, onAdd: suspend (String, String
     var failed by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text(stringResource(R.string.quote_add_own)) }, text = {
-        Column(verticalArrangement = Arrangement.spacedBy(D.Small)) {
+        Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(D.Small)) {
             OutlinedTextField(text, { text = it.take(1000) }, label = { Text(stringResource(R.string.quote_text)) }, minLines = 3, maxLines = 5,
                 isError = attempted && text.isBlank(), supportingText = { if (attempted && text.isBlank()) Text(stringResource(R.string.quote_required)) })
             OutlinedTextField(author, { author = it.take(120) }, label = { Text(stringResource(R.string.quote_author)) }, singleLine = true)

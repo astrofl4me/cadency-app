@@ -54,8 +54,12 @@ class FocusViewModel(private val repository: FocusRepository, private val planne
     fun choose(minutes: Int) { saved["focus_minutes"] = minutes; saved["focus_custom"] = false; form.update { it.copy(minutes = minutes, custom = false, invalid = false) } }
     fun custom() { saved["focus_custom"] = true; form.update { it.copy(custom = true) } }
     fun customText(value: String) { saved["focus_custom_text"] = value.take(3); form.update { it.copy(customText = value.take(3), invalid = false) } }
-    fun mode(value: FocusMode) { form.update { it.copy(mode = value) }; change { preferences.setFocusMode(value) } }
-    fun pomodoro(value: PomodoroConfig) { form.update { it.copy(pomodoro = value) }; change { preferences.setPomodoro(value) } }
+    fun mode(value: FocusMode) { form.update { it.copy(mode = value) }; storePreference { preferences.setFocusMode(value) } }
+    fun pomodoro(value: PomodoroConfig) { form.update { it.copy(pomodoro = value) }; storePreference { preferences.setPomodoro(value) } }
+    private fun storePreference(action: suspend () -> Unit) { viewModelScope.launch {
+        try { action() } catch (e: CancellationException) { throw e }
+        catch (_: Exception) { form.update { it.copy(error = true) } }
+    } }
     fun start() {
         val minutes = if (form.value.mode == FocusMode.POMODORO) form.value.pomodoro.focusMinutes
             else if (form.value.custom) form.value.customText.toIntOrNull() else form.value.minutes

@@ -10,6 +10,7 @@ import br.edu.fsa.planner.data.local.database.Migration3To4
 import br.edu.fsa.planner.data.local.database.Migration4To5
 import br.edu.fsa.planner.data.repository.QuoteRepository
 import br.edu.fsa.planner.data.remote.HttpQuoteRemoteDataSource
+import br.edu.fsa.planner.data.remote.QuoteRemoteDataSource
 import br.edu.fsa.planner.data.repository.PlannerRepository
 import br.edu.fsa.planner.data.repository.AuthRepository
 import br.edu.fsa.planner.data.repository.LocalAuthRepository
@@ -24,7 +25,8 @@ class PlannerApplication : Application() {
     val container by lazy { AppContainer(this) }
 }
 
-class AppContainer(context: Context, val authRepository: AuthRepository = LocalAuthRepository(context.sessionDataStore)) {
+class AppContainer(context: Context, val authRepository: AuthRepository = LocalAuthRepository(context.sessionDataStore),
+                   private val quoteRemote: QuoteRemoteDataSource = HttpQuoteRemoteDataSource()) {
     val preferencesRepository = PreferencesRepository(context.sessionDataStore)
     private val database by lazy {
         Room.databaseBuilder(context.applicationContext, PlannerDatabase::class.java, "planner.db")
@@ -32,7 +34,7 @@ class AppContainer(context: Context, val authRepository: AuthRepository = LocalA
     }
     val habitRepository by lazy { HabitRepository(database.habitDao()) }
     val focusRepository by lazy { FocusRepository(database.focusDao()) }
-    val quoteRepository by lazy { QuoteRepository(database.quoteDao(), preferencesRepository, HttpQuoteRemoteDataSource(), { QuoteRepository.localCollection(context) }) }
+    val quoteRepository by lazy { QuoteRepository(database.quoteDao(), preferencesRepository, quoteRemote, { QuoteRepository.localCollection(context) }) }
     val progressRepository by lazy { ProgressRepository(database.plannerDao(), habitRepository, focusRepository) }
     val plannerRepository by lazy { PlannerRepository(database.plannerDao(), habits = habitRepository) }
 }

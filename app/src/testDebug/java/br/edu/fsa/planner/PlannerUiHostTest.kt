@@ -114,56 +114,59 @@ class PlannerUiHostTest {
             storage = OkioStorage(FileSystem.SYSTEM, PreferencesSerializer) {
                 File(context.filesDir, "ui-test.preferences_pb").absolutePath.toPath()
             })
-        val container = AppContainer(context, LocalAuthRepository(store))
+        val container = AppContainer(context, LocalAuthRepository(store), object : br.edu.fsa.planner.data.remote.QuoteRemoteDataSource {
+            override suspend fun fetch(): List<br.edu.fsa.planner.data.remote.RemoteQuote> = throw java.io.IOException("Offline UI test")
+        })
         compose.setContent { PlannerTheme { PlannerNavigation(container) } }
         waitFor("Experimentar com conta demo")
         screenshot("login")
-        compose.onNodeWithText("Entrar").performClick()
+        compose.onNodeWithText("Entrar").performSemanticsAction(SemanticsActions.OnClick) { it() }
         compose.onNodeWithText("Informe um e-mail válido.").assertExists()
-        compose.onNodeWithText("Experimentar com conta demo").performClick()
-        waitFor("Planos do dia")
+        compose.onNodeWithText("Experimentar com conta demo").performSemanticsAction(SemanticsActions.OnClick) { it() }
+        waitFor("MEU DIA")
+        compose.onNodeWithTag("planner-paper-page").performScrollToNode(hasText("Planos do dia"))
         screenshot("daily-empty")
-        compose.onNodeWithContentDescription("Adicionar plano").performClick()
+        compose.onNodeWithContentDescription("Adicionar plano").performSemanticsAction(SemanticsActions.OnClick) { it() }
         compose.onNode(hasSetTextAction() and hasText("O que você quer planejar?")).performTextInput("Estudar circuitos")
         screenshot("editor")
         compose.onNodeWithText("Salvar plano").performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitForCheckbox("Concluir Estudar circuitos")
-        compose.onNodeWithText("Estudar circuitos").performScrollTo().performClick()
+        compose.onNodeWithText("Estudar circuitos").performScrollTo().performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitFor("Etapas")
-        compose.onNodeWithContentDescription("Editar plano").performClick()
+        compose.onNodeWithContentDescription("Editar plano").performSemanticsAction(SemanticsActions.OnClick) { it() }
         compose.onNode(hasSetTextAction() and hasText("O que você quer planejar?")).performTextReplacement("Revisar circuitos")
         compose.onNodeWithText("Salvar plano").performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitFor("Etapas")
-        compose.onNodeWithContentDescription("Voltar").performClick()
+        compose.onNodeWithContentDescription("Voltar").performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitForCheckbox("Concluir Revisar circuitos")
-        compose.onNodeWithContentDescription("Concluir Revisar circuitos").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Concluir Revisar circuitos").performScrollTo().performSemanticsAction(SemanticsActions.OnClick) { it() }
         compose.waitUntil(10_000) { compose.onAllNodesWithContentDescription("Marcar Revisar circuitos como pendente").fetchSemanticsNodes().isNotEmpty() }
         screenshot("daily-task")
-        compose.onNodeWithContentDescription("Registrar 3 copos de água").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Registrar 3 copos de água").performScrollTo().performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitFor("3 de 8")
         screenshot("daily-journal")
         compose.onNode(hasScrollAction()).performScrollToIndex(0)
-        compose.onNodeWithContentDescription("Próximo dia").performClick()
-        compose.onNodeWithText("Voltar para hoje").performClick()
-        compose.onNodeWithText("Semana").performClick()
+        compose.onNodeWithContentDescription("Próximo dia").performSemanticsAction(SemanticsActions.OnClick) { it() }
+        compose.onNodeWithText("Voltar para hoje").performSemanticsAction(SemanticsActions.OnClick) { it() }
+        compose.onNodeWithText("Semana").performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitFor("Planner semanal")
         screenshot("weekly")
-        compose.onNodeWithText("Mês").performClick()
+        compose.onNodeWithText("Mês").performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitFor("MEU MÊS")
         compose.onNodeWithTag("planner-month-page").performScrollToNode(hasText("Revisar circuitos"))
         screenshot("monthly")
-        compose.onNodeWithText("Hoje").performClick()
+        compose.onNodeWithText("Hoje").performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitFor("Revisar circuitos")
         compose.onNodeWithContentDescription("Registrar 3 copos de água").performScrollTo()
         compose.onNodeWithText("3 de 8").assertExists()
         compose.onNodeWithTag("planner-paper-page").performScrollToNode(hasText("Revisar circuitos"))
-        compose.onNodeWithText("Revisar circuitos").performClick()
+        compose.onNodeWithText("Revisar circuitos").performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitFor("Etapas")
-        compose.onNodeWithContentDescription("Editar plano").performClick()
-        compose.onNodeWithContentDescription("Excluir plano").performClick()
-        compose.onNodeWithText("Excluir", useUnmergedTree = true).performClick()
+        compose.onNodeWithContentDescription("Editar plano").performSemanticsAction(SemanticsActions.OnClick) { it() }
+        compose.onNodeWithContentDescription("Excluir plano").performSemanticsAction(SemanticsActions.OnClick) { it() }
+        compose.onNodeWithText("Excluir").performSemanticsAction(SemanticsActions.OnClick) { it() }
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Revisar circuitos").fetchSemanticsNodes().isEmpty() }
-        compose.onNodeWithContentDescription("Configurações").performClick()
+        compose.onNodeWithContentDescription("Configurações").performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitFor("Do seu jeito")
         screenshot("profile")
         compose.onNodeWithText("Sair da conta").performScrollTo().performSemanticsAction(SemanticsActions.OnClick) { it() }

@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import br.edu.fsa.planner.R
@@ -36,14 +37,14 @@ fun HabitIcon.vector() = when (this) {
 fun HabitsScreen(state: HabitsState, onAdd: () -> Unit, onEdit: (Habit) -> Unit,
                  onToggle: (Habit, LocalDate) -> Unit, onPrevious: () -> Unit, onNext: () -> Unit,
                  onCurrent: () -> Unit, onArchived: (Boolean) -> Unit) {
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(D.Page), verticalArrangement = Arrangement.spacedBy(D.Large)) {
+    LazyColumn(Modifier.fillMaxSize().testTag("habits-page"), contentPadding = PaddingValues(D.Page), verticalArrangement = Arrangement.spacedBy(D.Large)) {
         item {
             PlannerHeader(stringResource(R.string.habits_eyebrow), stringResource(R.string.tab_habits), stringResource(R.string.habits_subtitle))
         }
         item {
             SectionTitle(stringResource(R.string.heatmap_title))
             Text(stringResource(R.string.heatmap_subtitle), style = MaterialTheme.typography.bodyMedium)
-            CadencyHeatmap(state.map)
+            CadencyHeatmap(state.map, Modifier.testTag("habit-overall-map"))
             Text(stringResource(R.string.heatmap_flexible_hint), style = MaterialTheme.typography.bodySmall)
         }
         item {
@@ -61,19 +62,19 @@ fun HabitsScreen(state: HabitsState, onAdd: () -> Unit, onEdit: (Habit) -> Unit,
         if (state.error) item { Text(stringResource(R.string.storage_error), color = MaterialTheme.colorScheme.error) }
         if (!state.loading && state.habits.isEmpty()) item { EmptyState(stringResource(R.string.habits_empty)) }
         items(state.habits, key = { it.id }) { habit ->
-            CadencySurface(Modifier.fillMaxWidth()) {
+            CadencySurface(Modifier.fillMaxWidth().testTag("habit-${habit.id}")) {
             Column(Modifier.fillMaxWidth().animateContentSize(tween(LocalCadencyPersonality.current.motionMillis)).padding(D.Medium), verticalArrangement = Arrangement.spacedBy(D.Small)) {
                 Row(Modifier.fillMaxWidth().clickable { onEdit(habit) }.heightIn(min = D.Touch), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(D.Medium)) {
                     Icon(habit.icon.vector(), null, tint = MaterialTheme.colorScheme.primary)
                     Column(Modifier.weight(1f)) {
                         Text(habit.name, style = MaterialTheme.typography.titleMedium)
-                        Text(stringResource(if (habit.frequency == FrequencyType.WEEKLY) R.string.habit_weekly_goal else R.string.habit_daily_goal,
-                            habit.targetPerPeriod), style = MaterialTheme.typography.bodySmall)
+                        Text(if (habit.frequency == FrequencyType.WEEKLY) countedString(R.plurals.habit_weekly_goal, habit.targetPerPeriod, habit.targetPerPeriod)
+                            else stringResource(R.string.habit_daily_goal), style = MaterialTheme.typography.bodySmall)
                     }
                     Icon(Icons.Outlined.Edit, stringResource(R.string.paper_edit_habit))
                 }
-                LazyRow {
+                if (habit.frequency == FrequencyType.DAILY) LazyRow {
                     items(state.week.days, key = { it.toString() }) { date ->
                         val checked = state.checks.any { it.habitId == habit.id && it.date == date }
                         val checkLabel = stringResource(R.string.habit_check_date, habit.name, date.accessibilityLabel())
@@ -88,7 +89,7 @@ fun HabitsScreen(state: HabitsState, onAdd: () -> Unit, onEdit: (Habit) -> Unit,
                 val weekDone = state.checks.count { it.habitId == habit.id && it.date in state.week }
                 CadencyHeatmap(state.miniMaps[habit.id].orEmpty(), mini = true)
                 val weekGoal = HabitRules.opportunities(habit, state.week)
-                Text(stringResource(R.string.habit_week_summary, weekDone, weekGoal), style = MaterialTheme.typography.bodySmall)
+                Text(countedString(R.plurals.habit_week_summary, weekGoal, weekDone, weekGoal), style = MaterialTheme.typography.bodySmall)
                 val checkedToday = state.checks.any { it.habitId == habit.id && it.date == state.today }
                 if (HabitRules.isPlanned(habit, state.today) && !state.archived) {
                     OutlinedButton(onClick = { onToggle(habit, state.today) }, modifier = Modifier.fillMaxWidth()) {

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="quote_more">Ler mais</string>
+    <string name="quote_less">Mostrar menos</string>
+    <string name="focus_care_controls">Humor, água e autocuidado</string>
     <string name="quote_title">Cadency Quote</string>
     <string name="quote_read">Ler frase</string>
     <string name="quote_hide">Recolher</string>
@@ -38,7 +41,7 @@
     <string name="pomodoro">Pomodoro</string>
     <string name="focus_settings">Foco</string>
     <string name="pomodoro_preset">%1$d / %2$d</string>
-    <string name="pomodoro_summary">%1$d min de foco · %2$d min de pausa · %3$d ciclos · pausa longa de %4$d min</string>
+    <string name="pomodoro_summary">%1$d min de foco · %2$d min de pausa · ciclos: %3$d · pausa longa de %4$d min</string>
     <string name="pomodoro_custom">Seu Pomodoro</string>
     <string name="pomodoro_work">Foco em minutos</string>
     <string name="pomodoro_short">Pausa curta em minutos</string>
@@ -63,7 +66,6 @@
     <string name="heatmap_future">Dia futuro.</string>
     <string name="heatmap_not_planned">Nenhum hábito planejado para este dia.</string>
     <string name="heatmap_flexible">Meta semanal flexível, sem obrigação neste dia.</string>
-    <string name="heatmap_result">%1$d de %2$d hábitos realizados · %3$d%%</string>
     <string name="heatmap_flexible_hint">Metas semanais entram no mapa nos dias com check-in; os demais dias ficam neutros.</string>
     <string name="habit_details">Seu hábito</string>
     <string name="habit_focus">Focar neste hábito</string>
@@ -72,8 +74,6 @@
     <string name="period_year">1 ano</string>
     <string name="habit_recent_stats">Seu ritmo recente</string>
     <string name="habit_consistency_value">Consistência no período: %1$d%%</string>
-    <string name="habit_streak_days">Sequência atual: %1$d dias previstos</string>
-    <string name="habit_history_count">%1$d check-ins no histórico</string>
     <string name="habit_first_day">Esse ritmo começou em %1$s.</string>
     <string name="personality_title">Personalidade</string>
     <string name="preview_today">Seu dia, com calma</string>

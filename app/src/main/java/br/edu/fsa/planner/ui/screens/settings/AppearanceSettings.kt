@@ -2,6 +2,8 @@ package br.edu.fsa.planner.ui.screens.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
@@ -76,15 +78,25 @@ fun AppearanceSettings(preferences: PlannerPreferences, onTheme: (ThemeMode) -> 
 private fun AccentPicker(initial: AccentColor, onDismiss: () -> Unit, onSave: (AccentColor) -> Unit) {
     var hex by rememberSaveable { mutableStateOf(initial.hex) }
     val selected = AccentColor.parse(hex)
-    val hsv = remember(hex) { FloatArray(3).also { android.graphics.Color.colorToHSV(0xFF000000.toInt() or (selected ?: initial).rgb, it) } }
-    fun adjust(index: Int, value: Float) { val copy = hsv.copyOf(); copy[index] = value; hex = AccentColor(android.graphics.Color.HSVToColor(copy) and 0xFFFFFF).hex }
+    val initialHsv = remember(initial) { FloatArray(3).also { android.graphics.Color.colorToHSV(0xFF000000.toInt() or initial.rgb, it) } }
+    var hue by rememberSaveable { mutableFloatStateOf(initialHsv[0]) }
+    var saturation by rememberSaveable { mutableFloatStateOf(initialHsv[1]) }
+    var brightness by rememberSaveable { mutableFloatStateOf(initialHsv[2]) }
+    fun adjust(index: Int, value: Float) {
+        when (index) { 0 -> hue = value; 1 -> saturation = value; else -> brightness = value }
+        hex = AccentColor(android.graphics.Color.HSVToColor(floatArrayOf(hue, saturation, brightness)) and 0xFFFFFF).hex
+    }
     AlertDialog(onDismissRequest = onDismiss, title = { Text(stringResource(R.string.accent_picker)) }, text = {
-        Column {
+        Column(Modifier.verticalScroll(rememberScrollState())) {
             Box(Modifier.fillMaxWidth().height(D.Hero).background(Color(0xFF000000L or (selected ?: initial).rgb.toLong()), MaterialTheme.shapes.medium))
-            Text(stringResource(R.string.accent_hue)); Slider(hsv[0], { adjust(0, it) }, valueRange = 0f..360f)
-            Text(stringResource(R.string.accent_saturation)); Slider(hsv[1], { adjust(1, it) })
-            Text(stringResource(R.string.accent_brightness)); Slider(hsv[2], { adjust(2, it) })
-            OutlinedTextField(hex, { hex = it.take(7) }, label = { Text(stringResource(R.string.accent_hex)) }, singleLine = true,
+            val hueLabel = stringResource(R.string.accent_hue); val saturationLabel = stringResource(R.string.accent_saturation); val brightnessLabel = stringResource(R.string.accent_brightness)
+            Text(hueLabel); Slider(hue, { adjust(0, it) }, Modifier.semantics { contentDescription = hueLabel }, valueRange = 0f..360f)
+            Text(saturationLabel); Slider(saturation, { adjust(1, it) }, Modifier.semantics { contentDescription = saturationLabel })
+            Text(brightnessLabel); Slider(brightness, { adjust(2, it) }, Modifier.semantics { contentDescription = brightnessLabel })
+            OutlinedTextField(hex, { value -> hex = value.take(7); AccentColor.parse(hex)?.let { parsed ->
+                val hsv = FloatArray(3); android.graphics.Color.colorToHSV(0xFF000000.toInt() or parsed.rgb, hsv)
+                hue = hsv[0]; saturation = hsv[1]; brightness = hsv[2]
+            } }, label = { Text(stringResource(R.string.accent_hex)) }, singleLine = true,
                 isError = selected == null, supportingText = { if (selected == null) Text(stringResource(R.string.accent_invalid)) })
         }
     }, confirmButton = { TextButton(onClick = { selected?.let(onSave) }, enabled = selected != null) { Text(stringResource(R.string.save)) } },

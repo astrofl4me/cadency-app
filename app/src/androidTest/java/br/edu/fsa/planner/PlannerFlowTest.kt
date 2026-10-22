@@ -15,7 +15,8 @@ class PlannerFlowTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
     private fun waitFor(text: String) {
-        compose.waitUntil(10_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
+        try { compose.waitUntil(10_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() } }
+        catch (failure: Throwable) { throw AssertionError("Esperando texto: $text", failure) }
     }
 
     private fun openTodayTab() {
@@ -23,9 +24,9 @@ class PlannerFlowTest {
         compose.onNodeWithTag("planner-paper-page").performScrollToIndex(0)
     }
 
-    private fun waitForHabitSelection() {
+    private fun waitForHabitSelection(name: String) {
         compose.waitUntil(10_000) {
-            compose.onAllNodes(hasContentDescription("Leitura de teste, segunda-feira") and isSelected())
+            compose.onAllNodes(hasContentDescription("$name, segunda-feira") and isSelected())
                 .fetchSemanticsNodes().isNotEmpty()
         }
     }
@@ -41,6 +42,11 @@ class PlannerFlowTest {
     }
 
     @Test fun demoCanCreateEditCompleteDeleteNavigateAndLogout() {
+        val suffix = System.nanoTime().toString().takeLast(5)
+        val initialTitle = "Teste do planner $suffix"
+        val editedTitle = "Plano revisado $suffix"
+        val habitName = "Leitura de teste $suffix"
+        val editedHabitName = "Hábito revisado $suffix"
         // Also tolerates an existing demo session on a development device.
         compose.waitUntil(10_000) {
             compose.onAllNodesWithText("Experimentar com conta demo").fetchSemanticsNodes().isNotEmpty() ||
@@ -51,22 +57,27 @@ class PlannerFlowTest {
         }
         waitFor("MEU DIA")
         compose.onNodeWithContentDescription("Adicionar plano").performClick()
-        compose.onNode(hasSetTextAction() and hasText("O que você quer planejar?")).performTextInput("Teste do planner")
+        compose.onNode(hasSetTextAction() and hasText("O que você quer planejar?")).performTextInput(initialTitle)
         compose.onNodeWithText("Salvar plano").performSemanticsAction(SemanticsActions.OnClick) { it() }
-        compose.waitUntil(10_000) { compose.onAllNodesWithContentDescription("Concluir Teste do planner").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Teste do planner").performScrollTo().performClick()
+        waitFor("MEU DIA")
+        compose.onNodeWithTag("planner-paper-page").performScrollToNode(hasContentDescription("Concluir $initialTitle"))
+        compose.waitUntil(10_000) { compose.onAllNodesWithContentDescription("Concluir $initialTitle").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText(initialTitle).performScrollTo().performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitFor("Etapas")
         compose.onNodeWithContentDescription("Editar plano").performClick()
-        compose.onNode(hasSetTextAction() and hasText("O que você quer planejar?")).performTextReplacement("Plano revisado")
+        compose.onNode(hasSetTextAction() and hasText("O que você quer planejar?")).performTextReplacement(editedTitle)
         compose.onNodeWithText("Salvar plano").performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitFor("Etapas")
         compose.onNodeWithContentDescription("Voltar").performSemanticsAction(SemanticsActions.OnClick) { it() }
-        compose.waitUntil(10_000) { compose.onAllNodesWithContentDescription("Concluir Plano revisado").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithContentDescription("Concluir Plano revisado").performScrollTo().performClick()
-        compose.waitUntil(10_000) { compose.onAllNodesWithContentDescription("Marcar Plano revisado como pendente").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(10_000) { compose.onAllNodesWithContentDescription("Concluir $editedTitle").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithContentDescription("Concluir $editedTitle").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithContentDescription("Marcar $editedTitle como pendente").fetchSemanticsNodes().isNotEmpty() }
         compose.activityRule.scenario.recreate()
+        compose.waitUntil(15000) { compose.onAllNodesWithTag("planner-paper-page").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("planner-paper-page").performScrollToIndex(0)
         waitFor("MEU DIA")
-        compose.onNodeWithText("Plano revisado").performScrollTo().assertExists()
+        compose.onNodeWithTag("planner-paper-page").performScrollToNode(hasText(editedTitle))
+        compose.onNodeWithText(editedTitle).assertExists()
         compose.onNodeWithText("Semana").performClick()
         waitFor("MINHA SEMANA")
         compose.onNodeWithContentDescription("Próxima semana").performClick()
@@ -76,13 +87,14 @@ class PlannerFlowTest {
         compose.onNodeWithContentDescription("Próximo mês").performClick()
         compose.onNodeWithText("Mês atual").performClick()
         openTodayTab()
-        waitFor("Plano revisado")
-        compose.onNodeWithText("Plano revisado").performScrollTo().performClick()
+        compose.onNodeWithTag("planner-paper-page").performScrollToNode(hasText(editedTitle))
+        waitFor(editedTitle)
+        compose.onNodeWithText(editedTitle).performScrollTo().performSemanticsAction(SemanticsActions.OnClick) { it() }
         waitFor("Etapas")
         compose.onNodeWithContentDescription("Editar plano").performClick()
         compose.onNodeWithContentDescription("Excluir plano").performClick()
-        compose.onNodeWithText("Excluir", useUnmergedTree = true).performClick()
-        compose.waitUntil(10_000) { compose.onAllNodesWithText("Plano revisado").fetchSemanticsNodes().isEmpty() }
+        compose.onNodeWithText("Excluir").performSemanticsAction(SemanticsActions.OnClick) { it() }
+        compose.waitUntil(10_000) { compose.onAllNodesWithText(editedTitle).fetchSemanticsNodes().isEmpty() }
         compose.onNodeWithContentDescription("Registrar 4 copos de água").performScrollTo().performClick()
         waitFor("4 de 8")
         compose.onNodeWithTag("planner-paper-page").performScrollToNode(hasContentDescription("Editar Hoje eu agradeço por"))
@@ -97,22 +109,24 @@ class PlannerFlowTest {
         compose.onNodeWithTag("planner-paper-page").performScrollToNode(hasText("Adicionar hábito"))
         compose.onNodeWithText("Adicionar hábito").performClick()
         waitForTag("habit-name")
-        compose.onNodeWithTag("habit-name").performTextInput("Leitura de teste")
+        compose.onNodeWithTag("habit-name").performTextInput(habitName)
         compose.onNodeWithText("Salvar", useUnmergedTree = true).performClick()
-        waitFor("Leitura de teste")
-        compose.onNodeWithContentDescription("Leitura de teste, segunda-feira").performScrollTo().performClick()
-        waitForHabitSelection()
-        compose.onNodeWithContentDescription("Leitura de teste, segunda-feira").assertIsSelected()
+        compose.onNodeWithTag("planner-paper-page").performScrollToNode(hasText(habitName))
+        waitFor(habitName)
+        compose.onNodeWithContentDescription("$habitName, segunda-feira").performScrollTo().performClick()
+        waitForHabitSelection(habitName)
+        compose.onNodeWithContentDescription("$habitName, segunda-feira").assertIsSelected()
         compose.activityRule.scenario.recreate()
-        waitFor("Leitura de teste")
-        compose.onNodeWithTag("planner-paper-page").performScrollToNode(hasText("Leitura de teste"))
-        waitForHabitSelection()
-        compose.onNodeWithContentDescription("Leitura de teste, segunda-feira").assertIsSelected()
-        compose.onNodeWithText("Leitura de teste").performScrollTo().performClick()
-        compose.onNodeWithTag("habit-name").performTextReplacement("Hábito revisado")
+        waitForTag("planner-paper-page")
+        compose.onNodeWithTag("planner-paper-page").performScrollToNode(hasText(habitName))
+        waitForHabitSelection(habitName)
+        compose.onNodeWithContentDescription("$habitName, segunda-feira").assertIsSelected()
+        compose.onNodeWithText(habitName).performScrollTo().performClick()
+        compose.onNodeWithTag("habit-name").performTextReplacement(editedHabitName)
         compose.onNodeWithText("Salvar", useUnmergedTree = true).performClick()
-        waitFor("Hábito revisado")
-        compose.onNodeWithText("Hábito revisado").performScrollTo().performClick()
+        compose.onNodeWithTag("planner-paper-page").performScrollToNode(hasText(editedHabitName))
+        waitFor(editedHabitName)
+        compose.onNodeWithText(editedHabitName).performScrollTo().performClick()
         compose.onNodeWithText("Excluir hábito").performClick()
         openTodayTab()
         waitFor("MEU DIA")

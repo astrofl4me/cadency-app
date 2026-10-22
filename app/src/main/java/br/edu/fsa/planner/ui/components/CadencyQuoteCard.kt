@@ -13,6 +13,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.*
 import br.edu.fsa.planner.ui.theme.LocalCadencyPersonality
@@ -26,6 +27,8 @@ fun CadencyQuoteCard(state: QuoteState, onNext: () -> Unit, onFavorite: (String)
     val visual = LocalCadencyPersonality.current
     var expanded by rememberSaveable(visual.quietNavigation) { mutableStateOf(!visual.quietNavigation) }
     val quote = state.current
+    var fullQuote by rememberSaveable(quote?.id) { mutableStateOf(false) }
+    var overflows by remember(quote?.id) { mutableStateOf(false) }
     CadencySurface(Modifier.fillMaxWidth(), emphasized = true) {
         Column(Modifier.padding(D.Large).animateContentSize(tween(visual.motionMillis)), verticalArrangement = Arrangement.spacedBy(D.Small)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -38,8 +41,10 @@ fun CadencyQuoteCard(state: QuoteState, onNext: () -> Unit, onFavorite: (String)
                     if (quote != null) {
                         Row(horizontalArrangement = Arrangement.spacedBy(D.Medium)) {
                             if (visual.sectionMarker > D.None) Box(Modifier.width(visual.sectionMarker).height(D.Hero).background(MaterialTheme.colorScheme.primary))
-                            Text(quote.text, style = visual.quoteStyle)
+                            Text(quote.text, style = visual.quoteStyle, maxLines = if (fullQuote) Int.MAX_VALUE else 3, overflow = TextOverflow.Ellipsis,
+                                onTextLayout = { if (!fullQuote) overflows = it.hasVisualOverflow })
                         }
+                        if (overflows || fullQuote) TextButton(onClick = { fullQuote = !fullQuote }) { Text(stringResource(if (fullQuote) R.string.quote_less else R.string.quote_more)) }
                         Text(quote.author.ifBlank { stringResource(R.string.quote_no_author) }, style = MaterialTheme.typography.bodySmall)
                         Text(quote.rawCategory.ifBlank { stringResource(quote.category.label()) }, style = MaterialTheme.typography.labelSmall)
                         val update = maxOf(quote.fetchedAt, state.preferences.lastRotationAt)

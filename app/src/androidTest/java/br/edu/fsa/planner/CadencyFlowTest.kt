@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Rule
+import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
@@ -25,6 +26,11 @@ import java.time.LocalDate
 class CadencyFlowTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     private val container get() = ApplicationProvider.getApplicationContext<PlannerApplication>().container
+    @After fun closeTestFocus() {
+        runBlocking {
+            container.focusRepository.active.first()?.takeIf { it.title.startsWith("Etapas UI") }?.let { container.focusRepository.finish(it.id) }
+        }
+    }
     private fun waitFor(text: String) = compose.waitUntil(15000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
     private fun click(text: String) {
         waitFor(text)
@@ -36,6 +42,12 @@ class CadencyFlowTest {
     }
     private fun tab(text: String) { compose.onNode(hasText(text) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).performClick() }
     private fun back() { compose.onNodeWithContentDescription("Voltar").performSemanticsAction(SemanticsActions.OnClick) { it() } }
+    private fun showHabit(title: String) { compose.waitUntil(15000) {
+        try { compose.onNodeWithTag("habits-page").performScrollToNode(hasText(title)); true } catch (_: AssertionError) { false }
+    } }
+    private fun habitAction(id: Long, label: String) {
+        compose.onNode(hasText(label) and hasAnyAncestor(hasTestTag("habit-$id"))).performScrollTo().performClick()
+    }
     private fun login() {
         compose.waitUntil(15000) { compose.onAllNodesWithText("Experimentar com conta demo").fetchSemanticsNodes().isNotEmpty() ||
             compose.onAllNodesWithText("MEU DIA").fetchSemanticsNodes().isNotEmpty() }
@@ -79,30 +91,39 @@ class CadencyFlowTest {
         waitFor("Retomar")
         click("Retomar")
         screenshot("focus").recycle()
-        back(); waitFor("Etapas"); back(); waitFor("MEU DIA")
+        back(); waitFor("Etapas"); back()
+        compose.onNodeWithTag("planner-paper-page").performScrollToIndex(0)
+        waitFor("MEU DIA")
 
         tab("Hábitos")
+        compose.onNodeWithTag("habits-page").performScrollToNode(hasText("Adicionar hábito"))
         click("Adicionar hábito")
         val habitName = "Leitura UI ${System.nanoTime()}"
         compose.onNode(hasSetTextAction() and hasText("Nome do hábito")).performTextInput(habitName)
         click("Salvar")
-        waitFor(habitName)
-        click("Concluir hoje")
+        showHabit(habitName)
+        val habitId = runBlocking { container.habitRepository.habits.first().first { it.name == habitName }.id }
+        habitAction(habitId, "Concluir hoje")
         waitFor("Desfazer hoje")
-        click("Desfazer hoje"); waitFor("Concluir hoje"); click("Concluir hoje")
+        habitAction(habitId, "Desfazer hoje"); waitFor("Concluir hoje"); habitAction(habitId, "Concluir hoje")
         screenshot("habits").recycle()
-        click(habitName); click("Histórico")
+        click(habitName); click("Editar hábito"); click("Histórico")
         compose.onNodeWithText(today.accessibilityLabelForTest()).assertExists()
-        click("Fechar"); back()
+        click("Fechar"); back(); back()
         compose.activityRule.scenario.recreate()
+        showHabit(habitName)
         waitFor(habitName)
         click(habitName)
+        click("Editar hábito")
         compose.onNode(hasSetTextAction() and hasText("Nome do hábito")).performTextReplacement("$habitName revisado")
         compose.onNodeWithContentDescription("Arquivar hábito").performScrollTo().performClick()
         click("Salvar")
+        waitFor("$habitName revisado"); back()
+        compose.onNodeWithTag("habits-page").performScrollToNode(hasContentDescription("Mostrar arquivados"))
         compose.onNodeWithContentDescription("Mostrar arquivados").performScrollTo().performClick()
+        showHabit("$habitName revisado")
         waitFor("$habitName revisado")
-        click("$habitName revisado"); click("Excluir hábito"); click("Excluir")
+        click("$habitName revisado"); click("Editar hábito"); click("Excluir hábito"); click("Excluir")
 
         val pending = runBlocking { planner.save(PlannerItem(title = "Reorganizar UI", date = today.minusDays(1))) }
         tab("Hoje")
@@ -155,7 +176,10 @@ class CadencyFlowTest {
                     click(mood.name.lowercase().replaceFirstChar { it.uppercaseChar() })
                     compose.waitUntil(10000) { runBlocking { preferences.preferences.first().plannerPersonality == mood } }
                     val bitmap = screenshot("${mood.name.lowercase()}-${mode.name.lowercase()}")
-                    assertEquals(cadencyColors(mood, mode == ThemeMode.DARK).background.toArgb(), bitmap.getPixel(4, bitmap.height / 2))
+                    val background = cadencyColors(mood, mode == ThemeMode.DARK).background.toArgb()
+                    assertEquals(background, bitmap.getPixel(4, bitmap.height / 2))
+                    assertEquals("A barra de status acompanha o tema do app", background, bitmap.getPixel(4, 4))
+                    assertEquals("A barra de navegação acompanha o tema do app", background, bitmap.getPixel(4, bitmap.height - 4))
                     bitmap.recycle()
                 }
             }

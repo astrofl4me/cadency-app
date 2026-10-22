@@ -56,7 +56,10 @@ fun DateNavigator(previousDescription: String, nextDescription: String, currentL
 fun SectionTitle(title: String, count: Int? = null, onAdd: (() -> Unit)? = null) {
     Row(Modifier.fillMaxWidth().heightIn(min = D.Touch), verticalAlignment = Alignment.CenterVertically) {
         val marker = LocalCadencyPersonality.current.sectionMarker
-        if (marker > D.None) Box(Modifier.width(marker).height(D.Icon).background(MaterialTheme.colorScheme.primary))
+        if (marker > D.None) {
+            Box(Modifier.width(marker).height(D.Icon).background(MaterialTheme.colorScheme.primary))
+            Spacer(Modifier.width(D.Small))
+        }
         Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
         if (count != null && count > 0) Text(count.toString(), style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant)

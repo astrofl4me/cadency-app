@@ -1,6 +1,8 @@
 package br.edu.fsa.planner.ui.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -41,7 +43,7 @@ private fun PomodoroEditor(initial: PomodoroConfig, onDismiss: () -> Unit, onSav
     var long by rememberSaveable { mutableStateOf(initial.longBreakMinutes.toString()) }
     val value = PomodoroConfig(work.toIntOrNull() ?: 0, rest.toIntOrNull() ?: 0, cycles.toIntOrNull() ?: 0, long.toIntOrNull() ?: 0)
     AlertDialog(onDismissRequest = onDismiss, title = { Text(stringResource(R.string.pomodoro_custom)) }, text = {
-        Column(verticalArrangement = Arrangement.spacedBy(D.Small)) {
+        Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(D.Small)) {
             listOf(Triple(R.string.pomodoro_work, work) { text: String -> work = text.take(3) },
                 Triple(R.string.pomodoro_short, rest) { text: String -> rest = text.take(3) },
                 Triple(R.string.pomodoro_cycles, cycles) { text: String -> cycles = text.take(2) },

@@ -88,7 +88,7 @@ fun PaperItemRow(item: PlannerItem, onToggle: () -> Unit, onEdit: () -> Unit, pr
         Column(Modifier.weight(1f).padding(vertical = D.Small)) {
             Text(item.title, style = Paper.Body, color = if (item.isCompleted) Paper.Muted else Paper.Ink,
                 textDecoration = if (item.isCompleted) TextDecoration.LineThrough else TextDecoration.None)
-            if (progress != null && progress.total > 0) Text(stringResource(R.string.subtask_progress, progress.done, progress.total),
+            if (progress != null && progress.total > 0) Text(countedString(R.plurals.subtask_progress, progress.total, progress.done, progress.total),
                 style = Paper.Caption, color = Paper.Muted)
             item.startTime?.let { Text(if (item.endTime != null) "$it – ${item.endTime}" else it.toString(),
                 style = Paper.Caption, color = Paper.Muted) }

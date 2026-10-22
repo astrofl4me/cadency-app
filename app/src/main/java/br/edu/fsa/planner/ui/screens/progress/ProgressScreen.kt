@@ -10,6 +10,7 @@ import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.*
 import br.edu.fsa.planner.ui.components.*
 import br.edu.fsa.planner.ui.theme.PlannerDimens as D
+import br.edu.fsa.planner.ui.theme.LocalCadencyPersonality
 import br.edu.fsa.planner.viewmodel.ProgressState
 
 @Composable
@@ -29,12 +30,17 @@ fun ProgressScreen(state: ProgressState, onPeriod: (ProgressPeriod) -> Unit) {
         item {
             val metrics = listOf(R.string.metric_tasks to report.completedTasks.toInt(), R.string.metric_habits to report.habitCheckIns,
                 R.string.metric_focus to report.focusMinutes.toInt(), R.string.metric_days to report.plannedDays)
+            CadencySurface(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(D.Medium)) {
             metrics.chunked(2).forEach { row -> Row(Modifier.fillMaxWidth()) { row.forEach { (label, value) ->
                 Column(Modifier.weight(1f).padding(vertical = D.Small)) {
-                    Text(value.toString(), style = MaterialTheme.typography.headlineMedium)
+                    Text(value.toString(), style = if (label == R.string.metric_focus) LocalCadencyPersonality.current.timer.copy(
+                        fontSize = MaterialTheme.typography.headlineMedium.fontSize, lineHeight = MaterialTheme.typography.headlineMedium.lineHeight) else MaterialTheme.typography.headlineMedium)
                     Text(stringResource(label), style = MaterialTheme.typography.bodySmall)
                 }
             } } }
+            }
+            }
         }
         item {
             RhythmChart(stringResource(R.string.chart_tasks), report.tasks)
@@ -49,15 +55,15 @@ fun ProgressScreen(state: ProgressState, onPeriod: (ProgressPeriod) -> Unit) {
                     Text(habit.habit.name, Modifier.weight(1f)); Text(stringResource(R.string.percent_value, habit.percent))
                 }
                 LinearProgressIndicator(progress = { habit.percent / 100f }, modifier = Modifier.fillMaxWidth())
-                Text(stringResource(R.string.habit_period_summary, habit.done, habit.planned), style = MaterialTheme.typography.bodySmall)
+                Text(countedString(R.plurals.habit_period_summary, habit.planned, habit.done, habit.planned), style = MaterialTheme.typography.bodySmall)
             }
         }
         if (report.hasActivity) item {
             HorizontalDivider()
             val best = report.tasks.maxByOrNull { it.value }
-            if (best != null && best.value > 0) Text(stringResource(R.string.insight_tasks, best.date.weekdayLabel(), best.value.toInt()), Modifier.padding(vertical = D.Small))
+            if (best != null && best.value > 0) Text(countedString(R.plurals.insight_tasks, best.value.toInt(), best.date.weekdayLabel(), best.value.toInt()), Modifier.padding(vertical = D.Small))
             if (report.habitCheckIns > 0 && report.opportunities > 0) Text(stringResource(R.string.insight_habits, report.habitPercent), Modifier.padding(vertical = D.Small))
-            if (report.focusMinutes > 0) Text(stringResource(R.string.insight_focus, report.focusMinutes.toInt(), state.period.days.toInt()), Modifier.padding(vertical = D.Small))
+            if (report.focusMinutes > 0) Text(countedString(R.plurals.insight_focus, report.focusMinutes.toInt(), report.focusMinutes.toInt(), state.period.days.toInt()), Modifier.padding(vertical = D.Small))
             Text(stringResource(R.string.rhythm_encouragement), style = MaterialTheme.typography.bodyMedium)
         }
     }

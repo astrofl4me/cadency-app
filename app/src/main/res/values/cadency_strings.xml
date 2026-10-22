@@ -5,7 +5,6 @@
     <string name="week_rhythm">Ritmo da semana</string>
     <string name="week_rhythm_hint">Os pontos indicam a carga das tarefas em aberto, considerando as prioridades.</string>
     <string name="week_rhythm_level">Carga do dia: %1$d de 5</string>
-    <string name="habit_period_summary">%1$d de %2$d oportunidades no período</string>
     <string name="cadency_tagline">Organizar seus dias respeitando o seu ritmo.</string>
     <string name="settings_account">Conta</string>
     <string name="settings_appearance">Aparência</string>
@@ -37,9 +36,7 @@
     <string name="habit_weekly">Semanal</string>
     <string name="habit_days">Dias previstos</string>
     <string name="habit_times_week">Vezes por semana</string>
-    <string name="habit_weekly_goal">%1$d vezes por semana</string>
     <string name="habit_daily_goal">Nos dias selecionados</string>
-    <string name="habit_week_summary">%1$d de %2$d realizações nesta semana</string>
     <string name="habit_complete_today">Concluir hoje</string>
     <string name="habit_undo_today">Desfazer hoje</string>
     <string name="habit_archive">Arquivar hábito</string>
@@ -58,7 +55,6 @@
     <string name="task_reopen">Reabrir</string>
     <string name="start_focus">Iniciar foco</string>
     <string name="subtasks_title">Etapas</string>
-    <string name="subtask_progress">%1$d de %2$d etapas</string>
     <string name="subtasks_hint">Quebrar em etapas pode deixar o primeiro passo mais leve.</string>
     <string name="subtask_next">Próxima etapa</string>
     <string name="subtask_add">Adicionar etapa</string>
@@ -76,7 +72,6 @@
     <string name="rollover_discard">Não preciso mais</string>
     <string name="rollover_all">Manter todas para hoje</string>
     <string name="rollover_later">Revisar depois</string>
-    <string name="rollover_review_count">Vamos reorganizar? %1$d pendências</string>
     <string name="inbox_title">Caixa de entrada</string>
     <string name="inbox_count">Caixa de entrada · %1$d</string>
     <string name="inbox_hint">Ideias e tarefas esperando por um momento que faça sentido.</string>
@@ -112,8 +107,6 @@
     <string name="focus_complete_task">Concluir tarefa</string>
     <string name="focus_end_question">Encerrar esta sessão?</string>
     <string name="focus_end_hint">O tempo que você dedicou até aqui ficará salvo.</string>
-    <string name="focus_minutes_done">%1$d minutos de foco</string>
-    <string name="focus_seconds_done">%1$d segundos de foco</string>
     <string name="rhythm_eyebrow">SEU TEMPO, SEU RITMO</string>
     <string name="rhythm_title">Meu Ritmo</string>
     <string name="rhythm_subtitle">Entenda sua rotina sem transformar tudo em cobrança.</string>
@@ -131,8 +124,6 @@
     <string name="habit_consistency">Consistência dos hábitos</string>
     <string name="habit_consistency_empty">Ao registrar seus hábitos, você começa a conhecer sua constância.</string>
     <string name="percent_value">%1$d%%</string>
-    <string name="insight_tasks">Em %1$s você concluiu %2$d tarefas.</string>
     <string name="insight_habits">Você realizou seus hábitos em %1$d%% das oportunidades do período.</string>
-    <string name="insight_focus">Você acumulou %1$d minutos de foco nos últimos %2$d dias.</string>
     <string name="rhythm_encouragement">Continue no seu ritmo. Um passo de cada vez.</string>
 </resources>

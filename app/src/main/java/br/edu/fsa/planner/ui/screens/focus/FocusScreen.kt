@@ -19,6 +19,7 @@ import br.edu.fsa.planner.ui.components.CadencyTopBar
 import br.edu.fsa.planner.ui.components.CadencySurface
 import br.edu.fsa.planner.ui.components.FocusModeSelector
 import br.edu.fsa.planner.ui.components.PomodoroConfiguration
+import br.edu.fsa.planner.ui.components.countedString
 import br.edu.fsa.planner.ui.theme.PlannerPaper
 import br.edu.fsa.planner.ui.theme.PlannerDimens as D
 import br.edu.fsa.planner.viewmodel.FocusState
@@ -33,7 +34,7 @@ fun FocusScreen(state: FocusState, onChoose: (Int) -> Unit, onCustom: () -> Unit
     Scaffold(topBar = { CadencyTopBar(stringResource(R.string.focus_flow), onBack) }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).imePadding().padding(D.Page),
             verticalArrangement = Arrangement.spacedBy(D.Page), horizontalAlignment = Alignment.CenterHorizontally) {
-            if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if (state.loading) { LinearProgressIndicator(Modifier.fillMaxWidth()); return@Column }
             if (state.error) Text(stringResource(R.string.storage_error), color = MaterialTheme.colorScheme.error)
             val session = state.session
             Text((session?.title ?: state.title).ifBlank { stringResource(R.string.focus_free) }, style = MaterialTheme.typography.headlineMedium)
@@ -81,8 +82,10 @@ fun FocusScreen(state: FocusState, onChoose: (Int) -> Unit, onCustom: () -> Unit
                         })) }
                     OutlinedButton(onClick = { confirm = true }, enabled = !state.busy) { Text(stringResource(R.string.focus_end)) }
                 } else {
-                    Text(if (session.elapsedMillis >= 60000) stringResource(R.string.focus_minutes_done, (session.elapsedMillis / 60000).toInt())
-                        else stringResource(R.string.focus_seconds_done, (session.elapsedMillis / 1000).toInt()))
+                    val minutes = (session.elapsedMillis / 60000).toInt()
+                    val seconds = (session.elapsedMillis / 1000).toInt()
+                    Text(if (minutes > 0) countedString(R.plurals.focus_minutes_done, minutes, minutes)
+                        else countedString(R.plurals.focus_seconds_done, seconds, seconds))
                     Button(onClick = onRestart, enabled = !state.busy) { Text(stringResource(R.string.focus_continue)) }
                     TextButton(onClick = onBack) { Text(stringResource(R.string.focus_end)) }
                 }

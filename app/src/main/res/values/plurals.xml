@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="heatmap_result">
+        <item quantity="one">%1$d de %2$d hábito realizado · %3$d%%</item>
+        <item quantity="other">%1$d de %2$d hábitos realizados · %3$d%%</item>
+    </plurals>
+    <plurals name="habit_streak_days">
+        <item quantity="one">Sequência atual: %1$d dia previsto</item>
+        <item quantity="other">Sequência atual: %1$d dias previstos</item>
+    </plurals>
+    <plurals name="habit_history_count">
+        <item quantity="one">%1$d check-in no histórico</item>
+        <item quantity="other">%1$d check-ins no histórico</item>
+    </plurals>
+    <plurals name="focus_minutes_done">
+        <item quantity="one">%1$d minuto de foco</item>
+        <item quantity="other">%1$d minutos de foco</item>
+    </plurals>
+    <plurals name="focus_seconds_done">
+        <item quantity="one">%1$d segundo de foco</item>
+        <item quantity="other">%1$d segundos de foco</item>
+    </plurals>
+    <plurals name="subtask_progress">
+        <item quantity="one">%1$d de %2$d etapa</item>
+        <item quantity="other">%1$d de %2$d etapas</item>
+    </plurals>
+    <plurals name="habit_weekly_goal">
+        <item quantity="one">%1$d vez por semana</item>
+        <item quantity="other">%1$d vezes por semana</item>
+    </plurals>
+    <plurals name="habit_week_summary">
+        <item quantity="one">%1$d de %2$d realização nesta semana</item>
+        <item quantity="other">%1$d de %2$d realizações nesta semana</item>
+    </plurals>
+    <plurals name="habit_period_summary">
+        <item quantity="one">%1$d de %2$d oportunidade no período</item>
+        <item quantity="other">%1$d de %2$d oportunidades no período</item>
+    </plurals>
+    <plurals name="insight_tasks">
+        <item quantity="one">Em %1$s você concluiu %2$d tarefa.</item>
+        <item quantity="other">Em %1$s você concluiu %2$d tarefas.</item>
+    </plurals>
+    <plurals name="insight_focus">
+        <item quantity="one">Você acumulou %1$d minuto de foco nos últimos %2$d dias.</item>
+        <item quantity="other">Você acumulou %1$d minutos de foco nos últimos %2$d dias.</item>
+    </plurals>
+    <plurals name="rollover_review_count">
+        <item quantity="one">Vamos reorganizar? %1$d pendência</item>
+        <item quantity="other">Vamos reorganizar? %1$d pendências</item>
+    </plurals>
+</resources>

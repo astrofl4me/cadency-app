@@ -43,16 +43,18 @@ data class HabitEditorState(val habit: Habit = Habit(name = ""), val loading: Bo
 class HabitEditorViewModel(private val repository: HabitRepository, private val saved: SavedStateHandle) : ViewModel() {
     private val id = saved.get<Long>("habitId") ?: 0L
     private val _state = MutableStateFlow(HabitEditorState())
+    private var original: Habit? = null
     val state = _state.asStateFlow()
     val history = repository.history(id).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     init { viewModelScope.launch {
         try {
             val initial = if (id == 0L) Habit(name = "") else checkNotNull(repository.get(id))
+            original = initial.copy(isArchived = initial.isArchived || (initial.endsOn?.isBefore(LocalDate.now()) == true))
             val habit = initial.copy(name = saved["habit_name"] ?: initial.name, description = saved["habit_description"] ?: initial.description,
                 frequency = saved.get<String>("habit_frequency")?.let(FrequencyType::valueOf) ?: initial.frequency,
                 icon = saved.get<String>("habit_icon")?.let(HabitIcon::valueOf) ?: initial.icon,
                 category = saved.get<String>("habit_category")?.let(Category::valueOf) ?: initial.category,
-                isArchived = saved["habit_archived"] ?: initial.isArchived,
+                isArchived = saved["habit_archived"] ?: original!!.isArchived,
                 targetPerPeriod = saved["habit_target"] ?: initial.targetPerPeriod,
                 days = saved.get<Int>("habit_days")?.let { mask -> java.time.DayOfWeek.entries.filter { mask and (1 shl (it.value - 1)) != 0 }.toSet() } ?: initial.days)
             _state.value = HabitEditorState(habit, loading = false)
@@ -68,8 +70,10 @@ class HabitEditorViewModel(private val repository: HabitRepository, private val 
     }
     fun save() {
         if (!HabitRules.valid(state.value.habit)) { _state.value = state.value.copy(invalid = true); return }
-        mutate { repository.save(state.value.habit.let { if (it.isArchived && it.endsOn == null) it.copy(endsOn = LocalDate.now())
-            else if (!it.isArchived) it.copy(endsOn = null) else it }) }
+        mutate { repository.save(state.value.habit.let {
+            if (it.isArchived && (original?.isArchived != true || it.endsOn == null)) it.copy(endsOn = LocalDate.now())
+            else if (!it.isArchived && original?.isArchived == true) it.copy(endsOn = null) else it
+        }) }
     }
     fun delete() = mutate { repository.delete(id) }
     private fun mutate(action: suspend () -> Unit) {

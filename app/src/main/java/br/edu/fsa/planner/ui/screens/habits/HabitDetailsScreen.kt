@@ -21,7 +21,8 @@ fun HabitDetailsScreen(state: HabitDetailsState, onWeeks: (Int) -> Unit, onEdit:
             state.habit?.let { habit ->
                 item {
                     Text(habit.name, style = MaterialTheme.typography.headlineLarge)
-                    Text(stringResource(if (habit.frequency == FrequencyType.WEEKLY) R.string.habit_weekly_goal else R.string.habit_daily_goal, habit.targetPerPeriod))
+                    Text(if (habit.frequency == FrequencyType.WEEKLY) countedString(R.plurals.habit_weekly_goal, habit.targetPerPeriod, habit.targetPerPeriod)
+                        else stringResource(R.string.habit_daily_goal))
                     if (habit.description.isNotBlank()) Text(habit.description)
                     Row(horizontalArrangement = Arrangement.spacedBy(D.Small)) {
                         CadencyOutlinedButton(onEdit) { Text(stringResource(R.string.paper_edit_habit)) }
@@ -37,9 +38,9 @@ fun HabitDetailsScreen(state: HabitDetailsState, onWeeks: (Int) -> Unit, onEdit:
                 item {
                     SectionTitle(stringResource(R.string.habit_recent_stats))
                     Text(stringResource(R.string.habit_consistency_value, state.consistency))
-                    if (habit.frequency == FrequencyType.DAILY) Text(stringResource(R.string.habit_streak_days, state.streak))
+                    if (habit.frequency == FrequencyType.DAILY) Text(countedString(R.plurals.habit_streak_days, state.streak, state.streak))
                     else Text(stringResource(R.string.heatmap_flexible_hint))
-                    Text(stringResource(R.string.habit_history_count, state.checks.size))
+                    Text(countedString(R.plurals.habit_history_count, state.checks.size, state.checks.size))
                     Text(stringResource(R.string.habit_first_day, habit.startsOn.accessibilityLabel()), style = MaterialTheme.typography.bodySmall)
                 }
             }

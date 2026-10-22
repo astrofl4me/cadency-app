@@ -9,8 +9,15 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
+import androidx.annotation.PluralsRes
+import androidx.compose.ui.res.pluralStringResource
 
 val PlannerLocale: Locale = Locale.forLanguageTag("pt-BR")
+
+// A interface em português usa a forma plural nas contagens com zero.
+@Composable
+fun countedString(@PluralsRes resource: Int, count: Int, vararg args: Any): String =
+    pluralStringResource(resource, if (count == 1) 1 else 2, *args)
 fun LocalDate.longLabel(): String = format(DateTimeFormatter.ofPattern("d 'de' MMMM", PlannerLocale))
 fun LocalDate.weekdayLabel(): String = format(DateTimeFormatter.ofPattern("EEEE", PlannerLocale))
 fun LocalDate.shortLabel(): String = format(DateTimeFormatter.ofPattern("dd/MM", PlannerLocale))
