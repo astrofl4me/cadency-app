@@ -76,4 +76,16 @@
     <string name="inbox_hint">Ideias e tarefas esperando por um momento que faça sentido.</string>
     <string name="inbox_empty">Sua caixa de entrada está tranquila.</string>
     <string name="inbox_today">Trazer para hoje</string>
+    <string name="now_mode">Modo Agora</string>
+    <string name="enter_now">Entrar no Modo Agora</string>
+    <string name="now_eyebrow">AGORA</string>
+    <string name="good_morning">Bom dia. Um passo de cada vez.</string>
+    <string name="good_afternoon">Boa tarde. Um passo de cada vez.</string>
+    <string name="good_evening">Boa noite. Continue no seu ritmo.</string>
+    <string name="now_clear">Você está em dia.</string>
+    <string name="now_breath">Por agora, um respiro.</string>
+    <string name="now_choose">Escolher algo para fazer</string>
+    <string name="now_reset">Rever planos que pulei</string>
+    <string name="now_skip">Pular por agora</string>
+    <string name="now_next">Próximo</string>
 </resources>

@@ -24,7 +24,8 @@ import java.time.LocalDate
 fun DailyScreen(state: DailyUiState, onPrevious: () -> Unit, onNext: () -> Unit, onToday: () -> Unit,
                 onAdd: (LocalDate, ItemType) -> Unit, onEdit: (PlannerItem) -> Unit, onToggle: (PlannerItem) -> Unit,
                 onMood: (Mood) -> Unit, onNote: (String, DailyNoteField) -> Unit, onWater: (Int) -> Unit, onRetry: () -> Unit,
-                onReview: (() -> Unit)? = null, onInbox: (() -> Unit)? = null, pendingCount: Int = 0, inboxCount: Int = 0) {
+                onReview: (() -> Unit)? = null, onInbox: (() -> Unit)? = null, pendingCount: Int = 0, inboxCount: Int = 0,
+                onNow: (() -> Unit)? = null) {
     var editing by rememberSaveable(state.date.toString()) { mutableStateOf<DailyNoteField?>(null) }
     val priorities = state.items.filter { it.type == ItemType.PRIORITY || it.priority == Priority.HIGH }
     val agenda = state.items.filterNot { it in priorities }
@@ -41,6 +42,9 @@ fun DailyScreen(state: DailyUiState, onPrevious: () -> Unit, onNext: () -> Unit,
                     onPrevious, onNext, onToday)
                 if (pendingCount > 0 && onReview != null) TextButton(onClick = onReview) { Text(stringResource(R.string.rollover_review_count, pendingCount)) }
                 if (onInbox != null) TextButton(onClick = onInbox) { Text(stringResource(R.string.inbox_count, inboxCount)) }
+                if (onNow != null) androidx.compose.material3.OutlinedButton(onClick = onNow, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.enter_now))
+                }
             }
             if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             else if (state.hasError) item { DataError(onRetry) }

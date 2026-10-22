@@ -8,6 +8,15 @@ import java.time.LocalDate
 
 class CadencyRulesTest {
     private val monday = LocalDate.of(2026, 10, 19)
+    @Test fun nowModePrefersOngoingThenSoonThenPriorityAndSkipsCompleted() {
+        val now = monday.atTime(14, 0)
+        val ongoing = PlannerItem(id = 1, title = "Em andamento", date = monday, startTime = java.time.LocalTime.of(13, 30), endTime = java.time.LocalTime.of(14, 30))
+        val soon = PlannerItem(id = 2, title = "Em breve", date = monday, startTime = java.time.LocalTime.of(14, 20))
+        val priority = PlannerItem(id = 3, title = "Prioridade", date = monday, priority = Priority.HIGH)
+        val done = priority.copy(id = 4, isCompleted = true)
+        assertEquals(listOf(1L, 2L, 3L), NowRules.ordered(listOf(priority, soon, done, ongoing), now).map { it.id })
+        assertEquals(2L, NowRules.ordered(listOf(ongoing, soon), now, setOf(1)).first().id)
+    }
     @Test fun rolloverExcludesCompletedEventsInboxAndCurrentDates() {
         val pending = PlannerItem(title = "Ontem", date = monday.minusDays(1))
         assertTrue(RolloverRules.eligible(pending, monday))

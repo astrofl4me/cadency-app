@@ -45,6 +45,8 @@ import br.edu.fsa.planner.ui.screens.daily.DailyScreen
 import br.edu.fsa.planner.ui.screens.daily.RolloverDialog
 import br.edu.fsa.planner.ui.screens.daily.InboxScreen
 import br.edu.fsa.planner.viewmodel.RolloverViewModel
+import br.edu.fsa.planner.viewmodel.NowModeViewModel
+import br.edu.fsa.planner.ui.screens.now.NowModeScreen
 import br.edu.fsa.planner.ui.screens.weekly.WeeklyScreen
 import br.edu.fsa.planner.ui.screens.monthly.MonthlyScreen
 import br.edu.fsa.planner.ui.screens.settings.SettingsScreen
@@ -170,6 +172,11 @@ fun PlannerNavigation(container: AppContainer) {
             composable("inbox") {
                 InboxScreen(rolloverState.inbox, { navController.navigate("taskDetails/${it.id}") }, rollover::schedule) { navController.popBackStack() }
             }
+            composable("nowMode") {
+                val now: NowModeViewModel = viewModel(factory = viewModelFactory { initializer { NowModeViewModel(container.plannerRepository, createSavedStateHandle()) } })
+                val state by now.state.collectAsStateWithLifecycle()
+                NowModeScreen(state, now::complete, now::skip, { navController.popBackStack() }, now::clearSkipped, { navController.popBackStack() })
+            }
             composable("taskDetails/{itemId}", arguments = listOf(navArgument("itemId") { type = NavType.LongType })) {
                 val details: TaskDetailsViewModel = viewModel(factory = viewModelFactory { initializer { TaskDetailsViewModel(container.plannerRepository, createSavedStateHandle()) } })
                 val state by details.state.collectAsStateWithLifecycle()
@@ -212,7 +219,8 @@ fun PlannerNavigation(container: AppContainer) {
                         DailyScreen(state, { planner.moveDay(-1) }, { planner.moveDay(1) }, planner::goToday,
                             ::addItem, { navController.navigate("taskDetails/${it.id}") }, planner::toggle,
                             planner::setMood, planner::saveDailyReflection, planner::setWaterGlasses, planner::retryData,
-                            rollover::open, { navController.navigate("inbox") }, rolloverState.items.size, rolloverState.inbox.size)
+                            rollover::open, { navController.navigate("inbox") }, rolloverState.items.size, rolloverState.inbox.size,
+                            { navController.navigate("nowMode") })
                         if (rolloverState.showing) RolloverDialog(rolloverState, rollover::schedule,
                             rollover::inbox, rollover::discard, rollover::allToday, rollover::dismiss)
                     } else if (tab.route == "weekly") {
