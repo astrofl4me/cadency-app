@@ -51,6 +51,10 @@ import br.edu.fsa.planner.ui.screens.now.NowModeScreen
 import br.edu.fsa.planner.ui.screens.focus.FocusScreen
 import br.edu.fsa.planner.viewmodel.FocusViewModel
 import br.edu.fsa.planner.viewmodel.ProgressViewModel
+import br.edu.fsa.planner.viewmodel.QuoteViewModel
+import br.edu.fsa.planner.ui.components.CadencyQuoteCard
+import br.edu.fsa.planner.ui.screens.settings.QuoteSettings
+import br.edu.fsa.planner.ui.screens.quotes.QuotesScreen
 import br.edu.fsa.planner.ui.screens.progress.ProgressScreen
 import androidx.compose.material.icons.outlined.BarChart
 import br.edu.fsa.planner.ui.screens.weekly.WeeklyScreen
@@ -88,6 +92,8 @@ private val tabs = listOf(
 @Composable
 fun PlannerNavigation(container: AppContainer) {
     val visual = LocalCadencyPersonality.current
+    val quotes: QuoteViewModel = viewModel(factory = viewModelFactory { initializer { QuoteViewModel(container.quoteRepository, container.preferencesRepository) } })
+    val quoteState by quotes.state.collectAsStateWithLifecycle()
     val habits: HabitsViewModel = viewModel(factory = viewModelFactory { initializer { HabitsViewModel(container.habitRepository, createSavedStateHandle()) } })
     val settings: SettingsViewModel = viewModel(factory = viewModelFactory { initializer { SettingsViewModel(container.preferencesRepository) } })
     val preferences by settings.preferences.collectAsStateWithLifecycle()
@@ -109,7 +115,9 @@ fun PlannerNavigation(container: AppContainer) {
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(lifecycleOwner, planner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            quotes.onOpen()
             while (isActive) {
+                quotes.checkDue()
                 planner.refreshToday(); habits.refreshToday()
                 if (navController.currentDestination?.route == "daily") rollover.maybeOffer()
                 try { container.focusRepository.finishExpired() }
@@ -191,7 +199,11 @@ fun PlannerNavigation(container: AppContainer) {
                     SectionTitle(stringResource(R.string.focus_settings))
                     FocusModeSelector(preferences.defaultFocusMode, settings::setFocusMode)
                     PomodoroConfiguration(preferences.pomodoro, settings::setPomodoro)
+                    QuoteSettings(preferences.quote, settings::setQuoteCategory, settings::setQuoteMode) { navController.navigate("quotes") }
                 } }
+            }
+            composable("quotes") {
+                QuotesScreen(quoteState, quotes::favorite, quotes::deleteOwn, quotes::addOwn) { navController.popBackStack() }
             }
             composable("inbox") {
                 InboxScreen(rolloverState.inbox, { navController.navigate("taskDetails/${it.id}") }, rollover::schedule) { navController.popBackStack() }
@@ -265,7 +277,9 @@ fun PlannerNavigation(container: AppContainer) {
                             ::addItem, { navController.navigate("taskDetails/${it.id}") }, planner::toggle,
                             planner::setMood, planner::saveDailyReflection, planner::setWaterGlasses, planner::retryData,
                             rollover::open, { navController.navigate("inbox") }, rolloverState.items.size, rolloverState.inbox.size,
-                            { navController.navigate("nowMode") }, { navController.navigate("focusFlow") })
+                            { navController.navigate("nowMode") }, { navController.navigate("focusFlow") }) {
+                            CadencyQuoteCard(quoteState, quotes::next, quotes::favorite)
+                        }
                         if (rolloverState.showing) RolloverDialog(rolloverState, rollover::schedule,
                             rollover::inbox, rollover::discard, rollover::allToday, rollover::dismiss)
                     } else if (tab.route == "weekly") {

@@ -47,6 +47,7 @@ Intensidades: 0, 1–25%, 26–50%, 51–75%, 76–99%, 100%. As tonalidades der
 | A | assembleDebug e três testes de aparência/persistência/contraste passaram. |
 | B | assembleDebug e três testes de heatmap passaram, incluindo células neutras, futuras, percentuais e hábitos flexíveis. |
 | C | assembleDebug e testes de Pomodoro, armazenamento e preferências passaram. O teste com relógio controlado percorreu dois ciclos, pausas, reabertura do banco e pausa longa, contando só os minutos de foco. |
+| D | assembleDebug e testes de regras, cache, favoritas, frases próprias, parser, preferências e Room passaram. |
 
 Logs locais em `verification/local/refinement-*.log`; fontes/licenças são versionadas. O compilador Kotlin roda no processo Gradle para evitar o daemon Kotlin que não conseguia conectar no ambiente Windows; não há alteração global de Java ou de configuração do sistema.
 
@@ -59,3 +60,17 @@ Focus Flow mantém Fluxo livre e adiciona Pomodoro 25/5, 50/10 ou configuração
 Migration **3→4** adiciona vínculo opcional `habitId` com FK SET_NULL, modo, fase, ciclo, durações e tempo da fase. Sessões antigas são Fluxo livre e preservam o tempo já registrado. Excluir um hábito mantém o histórico de foco e o título original. A tarefa e o hábito são vínculos alternativos, não simultâneos.
 
 Ao encerrar uma sessão de hábito com tempo registrado e ocorrência prevista hoje, o app pergunta se deseja marcar o hábito. “Agora não” não altera check-ins; confirmar usa uma operação idempotente. O hábito nunca é concluído automaticamente.
+
+## Cadency Quote
+
+`QuoteRemoteDataSource` usa HTTPS nativo do Android, com coroutines/Dispatchers.IO, limites de tamanho e timeouts; não foi adicionada biblioteca de rede. `QuoteRepository` é a única entrada para a UI, com coleção Room, fallback local e rotação persistente. A tela Hoje não aguarda a rede.
+
+Migration **4→5** adiciona `quotes` e índices por categoria/favorito. IDs remotos são hashes estáveis do texto/autor; atualização de cache preserva favoritos. Até 200 frases remotas não favoritas são mantidas, além de favoritas, coleção local e frases próprias. Os oito textos de fallback são conteúdo original do Cadency, em `assets/quotes_pt_br.json`, com duas opções por categoria.
+
+O refresh lê `/categorias` e `/todas` em páginas de 50, no máximo quatro páginas. Atualizações bem-sucedidas têm intervalo mínimo de 24 horas; falhas têm espera de uma hora. “A cada abertura” e “Outra frase” rotacionam o cache sem request obrigatório. A sequência percorre as frases elegíveis e evita repetir a atual quando existe alternativa.
+
+Mapeamento local: Paz/Saúde/Felicidade → Calma; Reflexão/Provérbios → Reflexiva; Motivação/Inspiração/Sonhos/Sucesso/Mudança/Oportunidade/Trabalho → Motivacional. Textos desses dois últimos grupos com termos de constância, persistência, disciplina, hábito, prática ou esforço podem compor Disciplina. Categorias não mapeadas só participam de Aleatória. A categoria original continua registrada/exibida; não há endpoint fictício de Disciplina.
+
+Frequências: a cada abertura, 6 horas, diariamente (mudança de data no fuso do aparelho), 3 dias, semanal e somente manual. Trocar a categoria explicitamente escolhe uma frase compatível, inclusive no modo manual. Preferências: `preferred_quote_category`, `quote_refresh_mode`, `current_quote_id`, `last_quote_rotation_at`, `last_quote_remote_attempt_at`, `last_quote_remote_success_at`.
+
+Favoritas permanecem no banco offline. A tela também mantém frases próprias, com texto obrigatório e autor opcional. Frases pessoais ficam locais e entram como favoritas inicialmente; retirar o favorito não apaga a frase própria. O card segue a tipografia/superfície da personalidade; em Focus fica no fim da página e recolhido, com ação para ler. O conteúdo não muda conforme a personalidade.

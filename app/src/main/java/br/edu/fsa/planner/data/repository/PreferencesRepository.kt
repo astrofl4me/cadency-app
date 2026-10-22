@@ -18,6 +18,12 @@ class PreferencesRepository(private val store: DataStore<Preferences>) {
     private val shortBreak = intPreferencesKey("pomodoro_short_break_minutes")
     private val cycles = intPreferencesKey("pomodoro_cycles")
     private val longBreak = intPreferencesKey("pomodoro_long_break_minutes")
+    private val quoteCategory = stringPreferencesKey("preferred_quote_category")
+    private val quoteMode = stringPreferencesKey("quote_refresh_mode")
+    private val quoteCurrent = stringPreferencesKey("current_quote_id")
+    private val quoteRotation = longPreferencesKey("last_quote_rotation_at")
+    private val quoteAttempt = longPreferencesKey("last_quote_remote_attempt_at")
+    private val quoteSuccess = longPreferencesKey("last_quote_remote_success_at")
     private val rollover = booleanPreferencesKey("gentle_rollover_enabled")
     private val reviewed = stringPreferencesKey("last_rollover_review_date")
     val preferences = store.data.map { values -> PlannerPreferences(ready = true,
@@ -26,6 +32,9 @@ class PreferencesRepository(private val store: DataStore<Preferences>) {
         accentColor = values[accent]?.let(AccentColor::parse) ?: AccentColor.Default,
         defaultFocusMode = values[focusMode]?.let { runCatching { FocusMode.valueOf(it) }.getOrNull() } ?: FocusMode.FREE,
         pomodoro = PomodoroConfig(values[focusMinutes] ?: 25, values[shortBreak] ?: 5, values[cycles] ?: 4, values[longBreak] ?: 15).let { if (it.valid) it else PomodoroConfig() },
+        quote = QuotePreferences(values[quoteCategory]?.let { runCatching { QuoteCategory.valueOf(it) }.getOrNull() } ?: QuoteCategory.RANDOM,
+            values[quoteMode]?.let { runCatching { QuoteRefreshMode.valueOf(it) }.getOrNull() } ?: QuoteRefreshMode.DAILY,
+            values[quoteCurrent], values[quoteRotation] ?: 0, values[quoteAttempt] ?: 0, values[quoteSuccess] ?: 0),
         gentleRolloverEnabled = values[rollover] ?: true,
         lastRolloverReviewDate = values[reviewed]?.let { runCatching { LocalDate.parse(it) }.getOrNull() })
     }.catch { error ->
@@ -40,6 +49,11 @@ class PreferencesRepository(private val store: DataStore<Preferences>) {
         require(value.valid)
         store.edit { it[focusMinutes] = value.focusMinutes; it[shortBreak] = value.shortBreakMinutes; it[cycles] = value.cycles; it[longBreak] = value.longBreakMinutes }
     }
+    suspend fun setQuoteCategory(value: QuoteCategory) { store.edit { it[quoteCategory] = value.name } }
+    suspend fun setQuoteMode(value: QuoteRefreshMode) { store.edit { it[quoteMode] = value.name } }
+    suspend fun selectQuote(id: String, at: Long) { store.edit { it[quoteCurrent] = id; it[quoteRotation] = at } }
+    suspend fun quoteRemoteAttempt(at: Long) { store.edit { it[quoteAttempt] = at } }
+    suspend fun quoteRemoteSuccess(at: Long) { store.edit { it[quoteSuccess] = at } }
     suspend fun setRollover(value: Boolean) { store.edit { it[rollover] = value } }
     suspend fun markRolloverReviewed(date: LocalDate) { store.edit { it[reviewed] = date.toString() } }
 }

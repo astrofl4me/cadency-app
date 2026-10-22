@@ -8,7 +8,7 @@ enum class PlannerPersonality { COZY, SOFT, CLEAN, FOCUS }
 data class PlannerPreferences(val ready: Boolean = false, val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val plannerPersonality: PlannerPersonality = PlannerPersonality.CLEAN, val gentleRolloverEnabled: Boolean = true,
     val lastRolloverReviewDate: LocalDate? = null, val hasError: Boolean = false, val accentColor: AccentColor = AccentColor.Default,
-    val defaultFocusMode: FocusMode = FocusMode.FREE, val pomodoro: PomodoroConfig = PomodoroConfig())
+    val defaultFocusMode: FocusMode = FocusMode.FREE, val pomodoro: PomodoroConfig = PomodoroConfig(), val quote: QuotePreferences = QuotePreferences())
 
 enum class FrequencyType { DAILY, WEEKLY }
 enum class HabitIcon { WATER, BOOK, HEALTH, STUDY, CALM, CHECK }

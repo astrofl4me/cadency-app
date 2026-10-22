@@ -30,7 +30,7 @@ data class CadencyPersonalityTokens(
     val cardRadius: Dp, val controlRadius: Dp, val elevation: Dp, val border: Dp,
     val sectionMarker: Dp, val roundCheckbox: Boolean, val paperRules: Boolean,
     val prioritizeNow: Boolean, val quietNavigation: Boolean, val motionMillis: Int,
-    val heatmapRadius: Dp, val heatmapGap: Dp, val timer: TextStyle,
+    val heatmapRadius: Dp, val heatmapGap: Dp, val timer: TextStyle, val quoteStyle: TextStyle,
 ) {
     val cardShape get() = RoundedCornerShape(cardRadius)
     val controlShape get() = RoundedCornerShape(controlRadius)
@@ -67,7 +67,8 @@ fun personalityTokens(personality: PlannerPersonality): CadencyPersonalityTokens
         if (personality == PlannerPersonality.CLEAN) 2.dp else 0.dp, cozy, cozy, focus, focus,
         if (soft) 260 else if (cozy) 180 else 100,
         if (soft) 9.dp else if (cozy) 4.dp else 1.dp, if (cozy || soft) 5.dp else 3.dp,
-        style(if (focus) CadencyFonts.Mono else headings, if (focus) 58 else 48))
+        style(if (focus) CadencyFonts.Mono else headings, if (focus) 58 else 48),
+        style(if (cozy || soft) headings else body, if (cozy) 23 else if (soft) 20 else 16))
 }
 
 val LocalCadencyPersonality = staticCompositionLocalOf { personalityTokens(PlannerPersonality.CLEAN) }

@@ -1,6 +1,7 @@
 package br.edu.fsa.planner
 
 import br.edu.fsa.planner.data.local.database.Migration3To4
+import br.edu.fsa.planner.data.local.database.Migration4To5
 
 import android.content.Context
 import androidx.room.Room
@@ -188,7 +189,7 @@ class PlannerPersistenceTest {
             old.version = 1
         }
         database = Room.databaseBuilder(context, PlannerDatabase::class.java, name)
-            .addMigrations(PlannerDatabase.Migration1To2, Migration2To3, Migration3To4).build()
+            .addMigrations(PlannerDatabase.Migration1To2, Migration2To3, Migration3To4, Migration4To5).build()
         repository = PlannerRepository(database.plannerDao(), clock)
         assertEquals("Plano anterior", repository.observeDay(date).first().single().title)
         val note = repository.observeNote("day:$date").first()

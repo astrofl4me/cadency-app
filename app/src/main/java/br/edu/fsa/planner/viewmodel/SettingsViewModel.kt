@@ -18,6 +18,8 @@ class SettingsViewModel(private val repository: PreferencesRepository) : ViewMod
     fun setAccent(value: AccentColor) = change { repository.setAccent(value) }
     fun setFocusMode(value: FocusMode) = change { repository.setFocusMode(value) }
     fun setPomodoro(value: PomodoroConfig) = change { repository.setPomodoro(value) }
+    fun setQuoteCategory(value: QuoteCategory) = change { repository.setQuoteCategory(value) }
+    fun setQuoteMode(value: QuoteRefreshMode) = change { repository.setQuoteMode(value) }
     fun setRollover(value: Boolean) = change { repository.setRollover(value) }
     private fun change(action: suspend () -> Unit) { viewModelScope.launch {
         try { action(); _writeError.value = false }

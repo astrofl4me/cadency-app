@@ -12,3 +12,7 @@ As fontes abaixo são distribuídas sob a **SIL Open Font License 1.1**. As lice
 | IBM Plex Mono | Cronômetros Focus | [OFL](third_party/fonts/ibmplexmono-OFL.txt) |
 
 Origem: [repositório oficial Google Fonts](https://github.com/google/fonts). O commit exato consultado está em [GOOGLE_FONTS_COMMIT.txt](third_party/fonts/GOOGLE_FONTS_COMMIT.txt). Um arquivo romano variável por família usa os pesos 400/600; IBM Plex Mono usa apenas Regular. Não são incluídos itálicos nem coleções de pesos separadas. As fontes funcionam offline a partir de `res/font`. Nenhuma fonte foi modificada ou renomeada internamente.
+
+## Frases remotas
+
+Frases remotas vêm da [API pública de Frases Motivacionais — Ferramentas da Web](https://www.ferramentasdaweb.com.br/mensagens-motivacionais/api/docs/), cuja documentação permite uso gratuito em projetos. Texto, autor e categoria originais são preservados; o aplicativo mostra a fonte. As atribuições são fornecidas pela API, sem verificação editorial adicional pelo Cadency. Frases próprias não são enviadas ao serviço. Os textos de fallback são conteúdo original do aplicativo.

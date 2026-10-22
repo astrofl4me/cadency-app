@@ -26,7 +26,7 @@ class CadencyStorageTest {
     private val name = "cadency-${UUID.randomUUID()}.db"
     private var db = open()
     private fun open() = Room.databaseBuilder(context, PlannerDatabase::class.java, name)
-        .addMigrations(PlannerDatabase.Migration1To2, Migration2To3, Migration3To4).build()
+        .addMigrations(PlannerDatabase.Migration1To2, Migration2To3, Migration3To4, Migration4To5).build()
     @After fun close() { db.close(); context.deleteDatabase(name) }
     @Test fun pomodoroPersistsPhasesAndCountsOnlyWorkNotBreaks() = runBlocking {
         class TestClock(var value: Long) : Clock() {

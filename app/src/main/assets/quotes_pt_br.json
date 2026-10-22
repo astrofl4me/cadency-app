@@ -1,0 +1,10 @@
+[
+  {"id":"calm-1","text":"Você pode organizar o dia deixando espaço para respirar.","category":"CALM"},
+  {"id":"calm-2","text":"Uma pausa também pode ser um jeito de seguir em frente.","category":"CALM"},
+  {"id":"reflect-1","text":"O que merece sua atenção neste momento?","category":"REFLECTIVE"},
+  {"id":"reflect-2","text":"Nem tudo precisa caber em um único dia.","category":"REFLECTIVE"},
+  {"id":"motivation-1","text":"Um pequeno começo já abre espaço para o próximo passo.","category":"MOTIVATIONAL"},
+  {"id":"motivation-2","text":"Você pode recomeçar com o que tem hoje.","category":"MOTIVATIONAL"},
+  {"id":"discipline-1","text":"Escolha um passo possível e reserve um pouco de tempo para ele.","category":"DISCIPLINE"},
+  {"id":"discipline-2","text":"Uma rotina pode ser constante e ainda respeitar seus limites.","category":"DISCIPLINE"}
+]

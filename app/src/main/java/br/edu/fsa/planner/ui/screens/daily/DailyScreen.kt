@@ -31,7 +31,7 @@ fun DailyScreen(state: DailyUiState, onPrevious: () -> Unit, onNext: () -> Unit,
                 onAdd: (LocalDate, ItemType) -> Unit, onEdit: (PlannerItem) -> Unit, onToggle: (PlannerItem) -> Unit,
                 onMood: (Mood) -> Unit, onNote: (String, DailyNoteField) -> Unit, onWater: (Int) -> Unit, onRetry: () -> Unit,
                 onReview: (() -> Unit)? = null, onInbox: (() -> Unit)? = null, pendingCount: Int = 0, inboxCount: Int = 0,
-                onNow: (() -> Unit)? = null, onFocus: (() -> Unit)? = null) {
+                onNow: (() -> Unit)? = null, onFocus: (() -> Unit)? = null, quoteContent: @Composable () -> Unit = {}) {
     var editing by rememberSaveable(state.date.toString()) { mutableStateOf<DailyNoteField?>(null) }
     val visual = LocalCadencyPersonality.current
     var journalVisible by rememberSaveable { mutableStateOf(false) }
@@ -69,6 +69,7 @@ fun DailyScreen(state: DailyUiState, onPrevious: () -> Unit, onNext: () -> Unit,
             if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             else if (state.hasError) item { DataError(onRetry) }
             else {
+                if (!visual.prioritizeNow) item { quoteContent() }
                 item {
                     PaperColumns(primary = {
                         PaperItemSection(stringResource(R.string.priorities), priorities, shaded = true,
@@ -107,6 +108,7 @@ fun DailyScreen(state: DailyUiState, onPrevious: () -> Unit, onNext: () -> Unit,
                     Text(stringResource(R.string.tomorrow_date, state.date.plusDays(1).shortLabel()),
                         style = Paper.Caption, color = Paper.Muted, modifier = Modifier.padding(horizontal = D.Medium))
                 }
+                if (visual.prioritizeNow) item { quoteContent() }
             }
         }
     }

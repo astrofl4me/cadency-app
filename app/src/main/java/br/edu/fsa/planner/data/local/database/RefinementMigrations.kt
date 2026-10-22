@@ -18,3 +18,11 @@ val Migration3To4 = object : Migration(3, 4) {
         db.execSQL("ALTER TABLE focus_sessions ADD COLUMN awaitingPhaseStart INTEGER NOT NULL DEFAULT 0")
     }
 }
+
+val Migration4To5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE quotes (id TEXT NOT NULL PRIMARY KEY, text TEXT NOT NULL, author TEXT NOT NULL, category TEXT NOT NULL, rawCategory TEXT NOT NULL, fetchedAt INTEGER NOT NULL, isFavorite INTEGER NOT NULL, source TEXT NOT NULL)")
+        db.execSQL("CREATE INDEX index_quotes_isFavorite ON quotes(isFavorite)")
+        db.execSQL("CREATE INDEX index_quotes_category ON quotes(category)")
+    }
+}
