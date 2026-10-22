@@ -1,6 +1,7 @@
 package br.edu.fsa.planner.ui.components
 
 import br.edu.fsa.planner.R
+import androidx.compose.runtime.Composable
 import br.edu.fsa.planner.domain.model.*
 import br.edu.fsa.planner.ui.theme.PlannerColors
 import java.time.LocalDate
@@ -21,6 +22,6 @@ fun ItemType.label(): Int = when (this) {
 }
 fun Priority.label(): Int = when (this) { Priority.LOW -> R.string.priority_low; Priority.MEDIUM -> R.string.priority_medium; Priority.HIGH -> R.string.priority_high }
 fun Category.label(): Int = when (this) { Category.PERSONAL -> R.string.category_personal; Category.STUDY -> R.string.category_study; Category.WORK -> R.string.category_work; Category.HEALTH -> R.string.category_health }
-fun Category.color() = when (this) { Category.PERSONAL -> PlannerColors.PeachInk; Category.STUDY -> PlannerColors.LavenderInk; Category.WORK -> PlannerColors.BlueInk; Category.HEALTH -> PlannerColors.Sage }
-fun Category.tint() = when (this) { Category.PERSONAL -> PlannerColors.Peach; Category.STUDY -> PlannerColors.Lavender; Category.WORK -> PlannerColors.BlueTint; Category.HEALTH -> PlannerColors.SageTint }
+@Composable fun Category.color() = when (this) { Category.PERSONAL -> PlannerColors.PeachInk; Category.STUDY -> PlannerColors.LavenderInk; Category.WORK -> PlannerColors.BlueInk; Category.HEALTH -> PlannerColors.Sage }
+@Composable fun Category.tint() = when (this) { Category.PERSONAL -> PlannerColors.Peach; Category.STUDY -> PlannerColors.Lavender; Category.WORK -> PlannerColors.BlueTint; Category.HEALTH -> PlannerColors.SageTint }
 fun Mood.label(): Int = when (this) { Mood.DIFFICULT -> R.string.mood_difficult; Mood.QUIET -> R.string.mood_quiet; Mood.GOOD -> R.string.mood_good; Mood.GREAT -> R.string.mood_great }

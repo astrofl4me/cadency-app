@@ -9,6 +9,7 @@ import br.edu.fsa.planner.data.local.database.Migration2To3
 import br.edu.fsa.planner.data.repository.PlannerRepository
 import br.edu.fsa.planner.data.repository.AuthRepository
 import br.edu.fsa.planner.data.repository.LocalAuthRepository
+import br.edu.fsa.planner.data.repository.PreferencesRepository
 
 private val Context.sessionDataStore by preferencesDataStore(name = "planner_preferences")
 
@@ -17,6 +18,7 @@ class PlannerApplication : Application() {
 }
 
 class AppContainer(context: Context, val authRepository: AuthRepository = LocalAuthRepository(context.sessionDataStore)) {
+    val preferencesRepository = PreferencesRepository(context.sessionDataStore)
     private val database by lazy {
         Room.databaseBuilder(context.applicationContext, PlannerDatabase::class.java, "planner.db")
             .addMigrations(PlannerDatabase.Migration1To2, Migration2To3).build()

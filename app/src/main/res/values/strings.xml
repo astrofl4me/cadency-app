@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" tools:locale="pt">
-    <string name="app_name">Meu Planner</string>
+    <string name="app_name">Cadency</string>
     <string name="tab_today">Hoje</string>
     <string name="tab_week">Semana</string>
     <string name="tab_month">Mês</string>

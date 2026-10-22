@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import br.edu.fsa.planner.R
 import br.edu.fsa.planner.AppContainer
 import br.edu.fsa.planner.viewmodel.AuthViewModel
+import br.edu.fsa.planner.viewmodel.SettingsViewModel
 import br.edu.fsa.planner.ui.screens.auth.LoginScreen
 import br.edu.fsa.planner.ui.screens.editor.EditorScreen
 import br.edu.fsa.planner.viewmodel.EditorViewModel
@@ -62,6 +63,9 @@ private val tabs = listOf(
 
 @Composable
 fun PlannerNavigation(container: AppContainer) {
+    val settings: SettingsViewModel = viewModel(factory = viewModelFactory { initializer { SettingsViewModel(container.preferencesRepository) } })
+    val preferences by settings.preferences.collectAsStateWithLifecycle()
+    val settingsError by settings.writeError.collectAsStateWithLifecycle()
     val auth: AuthViewModel = viewModel(factory = viewModelFactory { initializer { AuthViewModel(container.authRepository) } })
     val planner: PlannerViewModel = viewModel(factory = viewModelFactory {
         initializer { PlannerViewModel(container.plannerRepository, createSavedStateHandle()) }
@@ -171,7 +175,8 @@ fun PlannerNavigation(container: AppContainer) {
                             { planner.selectDay(it); navController.navigate("daily") { popUpTo("daily"); launchSingleTop = true } },
                             ::addItem, { navController.navigate("editor?itemId=${it.id}") }, planner::toggle, planner::retryData)
                     } else {
-                        session.user?.let { SettingsScreen(it, login.busy, login.error != null, auth::signOut) }
+                        session.user?.let { SettingsScreen(it, login.busy, login.error != null || settingsError,
+                            auth::signOut, preferences, settings::setTheme, settings::setMood, settings::setRollover) }
                     }
                 }
             }
