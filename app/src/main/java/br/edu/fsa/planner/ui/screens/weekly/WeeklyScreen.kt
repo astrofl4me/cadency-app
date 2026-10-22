@@ -2,6 +2,7 @@ package br.edu.fsa.planner.ui.screens.weekly
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -13,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.*
 import br.edu.fsa.planner.ui.components.*
@@ -48,6 +51,10 @@ fun WeeklyScreen(state: WeeklyUiState, onPrevious: () -> Unit, onNext: () -> Uni
             if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             else if (state.hasError) item { DataError(onRetry) }
             else {
+                item {
+                    SectionTitle(stringResource(R.string.week_rhythm))
+                    Text(stringResource(R.string.week_rhythm_hint), style = Paper.Caption, color = Paper.Muted)
+                }
                 item {
                     PaperColumns(primary = {
                         Column(verticalArrangement = Arrangement.spacedBy(D.Small)) {
@@ -92,6 +99,12 @@ private fun WeeklyDay(date: LocalDate, today: Boolean, items: List<PlannerItem>,
             verticalArrangement = Arrangement.spacedBy(D.Tiny)) {
             Text(date.weekdayLabel().removeSuffix("-feira"), style = Paper.Label, color = Paper.Ink)
             Text(date.dayOfMonth.toString(), style = Paper.Title, color = Paper.Ink)
+            val level = WeeklyRhythm.level(items)
+            val rhythmLabel = stringResource(R.string.week_rhythm_level, level)
+            Row(Modifier.semantics { contentDescription = rhythmLabel }, horizontalArrangement = Arrangement.spacedBy(D.Tiny)) {
+                repeat(5) { index -> Box(Modifier.size(D.Indicator).background(
+                    if (index < level) MaterialTheme.colorScheme.primary else Paper.Rule, CircleShape)) }
+            }
             if (today) Text(stringResource(R.string.today_label), style = Paper.Caption, color = MaterialTheme.colorScheme.primary)
         }
         Column(Modifier.weight(1f).padding(end = D.Small, bottom = D.Small)) {

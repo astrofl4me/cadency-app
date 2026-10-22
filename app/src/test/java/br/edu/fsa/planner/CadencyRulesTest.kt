@@ -8,6 +8,15 @@ import java.time.LocalDate
 
 class CadencyRulesTest {
     private val monday = LocalDate.of(2026, 10, 19)
+    @Test fun weeklyRhythmWeightsPendingTasksAndCapsAtFive() {
+        val low = PlannerItem(title = "Leve", date = monday, priority = Priority.LOW)
+        assertEquals(0, WeeklyRhythm.level(emptyList()))
+        assertEquals(1, WeeklyRhythm.level(listOf(low)))
+        assertEquals(2, WeeklyRhythm.level(listOf(low, low.copy(priority = Priority.HIGH))))
+        assertEquals(5, WeeklyRhythm.level(List(12) { low.copy(priority = Priority.HIGH) }))
+        assertEquals(0, WeeklyRhythm.level(listOf(low.copy(isCompleted = true), low.copy(isInbox = true),
+            low.copy(isDiscarded = true), low.copy(type = ItemType.EVENT))))
+    }
     @Test fun focusTimerHandlesPauseAndDeadlineWithoutNegativeTime() {
         val session = FocusSession(day = monday, startedAt = 1000, plannedSeconds = 60, resumedAt = 1000)
         assertEquals(30000, FocusRules.remaining(session, 31000))
