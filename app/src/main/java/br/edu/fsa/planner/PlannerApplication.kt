@@ -12,6 +12,7 @@ import br.edu.fsa.planner.data.repository.LocalAuthRepository
 import br.edu.fsa.planner.data.repository.PreferencesRepository
 import br.edu.fsa.planner.data.repository.HabitRepository
 import br.edu.fsa.planner.data.repository.FocusRepository
+import br.edu.fsa.planner.data.repository.ProgressRepository
 
 private val Context.sessionDataStore by preferencesDataStore(name = "planner_preferences")
 
@@ -27,5 +28,6 @@ class AppContainer(context: Context, val authRepository: AuthRepository = LocalA
     }
     val habitRepository by lazy { HabitRepository(database.habitDao()) }
     val focusRepository by lazy { FocusRepository(database.focusDao()) }
+    val progressRepository by lazy { ProgressRepository(database.plannerDao(), habitRepository, focusRepository) }
     val plannerRepository by lazy { PlannerRepository(database.plannerDao(), habits = habitRepository) }
 }

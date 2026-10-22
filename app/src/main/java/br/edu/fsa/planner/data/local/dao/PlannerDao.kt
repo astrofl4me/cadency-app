@@ -53,6 +53,10 @@ interface PlannerDao : HabitDao {
     fun observePending(today: LocalDate): Flow<List<PlannerItemEntity>>
     @Query("SELECT * FROM planner_items WHERE isInbox = 1 AND isDiscarded = 0 AND isCompleted = 0 ORDER BY createdAt, id")
     fun observeInbox(): Flow<List<PlannerItemEntity>>
+    @Query("SELECT COALESCE(completedOn,date) AS date, COUNT(*) AS value FROM planner_items WHERE isCompleted = 1 AND isDiscarded = 0 AND type != 'EVENT' AND COALESCE(completedOn,date) BETWEEN :start AND :end GROUP BY COALESCE(completedOn,date) ORDER BY date")
+    fun observeCompletedCounts(start: LocalDate, end: LocalDate): Flow<List<DailyCount>>
+    @Query("SELECT COUNT(DISTINCT date) FROM planner_items WHERE isInbox = 0 AND isDiscarded = 0 AND date BETWEEN :start AND :end")
+    fun observePlannedDays(start: LocalDate, end: LocalDate): Flow<Int>
     @Query("UPDATE planner_items SET originalDate = COALESCE(originalDate,date), date = :date, rolloverCount = rolloverCount + 1, isInbox = 0, updatedAt = :timestamp WHERE id = :id AND isCompleted = 0 AND isDiscarded = 0")
     suspend fun reschedule(id: Long, date: LocalDate, timestamp: Long)
     @Query("UPDATE planner_items SET originalDate = COALESCE(originalDate,date), rolloverCount = rolloverCount + 1, isInbox = 1, updatedAt = :timestamp WHERE id = :id AND isCompleted = 0")

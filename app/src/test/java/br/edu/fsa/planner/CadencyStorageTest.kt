@@ -28,6 +28,38 @@ class CadencyStorageTest {
     private fun open() = Room.databaseBuilder(context, PlannerDatabase::class.java, name)
         .addMigrations(PlannerDatabase.Migration1To2, Migration2To3).build()
     @After fun close() { db.close(); context.deleteDatabase(name) }
+    @Test fun progressUsesCompletionDatesScheduledHabitsAndActualFocus() = runBlocking {
+        val today = LocalDate.of(2026, 10, 21)
+        val clock = Clock.fixed(today.atTime(12, 0).toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
+        val planner = PlannerRepository(db.plannerDao(), clock = clock)
+        val habits = HabitRepository(db.habitDao(), clock)
+        val focus = FocusRepository(db.focusDao(), clock)
+        val progress = ProgressRepository(db.plannerDao(), habits, focus)
+        val id = planner.save(PlannerItem(title = "Antiga", date = today.minusDays(20)))
+        planner.setCompleted(planner.get(id)!!, true)
+        planner.save(PlannerItem(title = "Futuro", date = today.plusDays(1)))
+        planner.save(PlannerItem(title = "Agenda", date = today))
+        planner.save(PlannerItem(title = "Evento", date = today, type = ItemType.EVENT, isCompleted = true))
+        val habit = habits.save(Habit(name = "Ler", startsOn = today.minusDays(2), days = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY)))
+        habits.toggle(habit, today)
+        db.focusDao().insert(FocusSessionEntity(plannerItemId = null, title = "Foco", day = today, startedAt = clock.millis() - 150000,
+            endedAt = clock.millis(), plannedSeconds = 900, elapsedMillis = 150000, resumedAt = null, status = "STOPPED"))
+        val week = progress.observe(DateInterval(today.minusDays(6), today)).first()
+        assertEquals(1L, week.completedTasks)
+        assertEquals(1L, week.tasks.last().value)
+        assertEquals(7, week.tasks.size)
+        assertEquals(2L, week.focusMinutes)
+        assertEquals(1, week.plannedDays)
+        assertEquals(1, week.habitCheckIns)
+        assertEquals(50, week.habitPercent)
+        val month = progress.observe(DateInterval(today.minusDays(29), today)).first()
+        assertEquals(30, month.tasks.size)
+        assertEquals(2, month.plannedDays)
+        assertTrue(month.hasActivity)
+        val empty = progress.observe(DateInterval(today.minusDays(40), today.minusDays(31))).first()
+        assertFalse(empty.hasActivity)
+        assertEquals(0, empty.opportunities)
+    }
     @Test fun focusCountsElapsedTimeExcludingPauseAndRecoversDeadline() = runBlocking {
         class TestClock(var value: Long) : Clock() {
             override fun getZone(): ZoneId = ZoneOffset.UTC

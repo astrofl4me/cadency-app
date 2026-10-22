@@ -59,6 +59,7 @@ object PlannerDimens {
     val PaperDot = 10.dp
     val PaperMood = 28.dp
     val FocusTimer = 220.dp
+    val ChartHeight = 132.dp
 }
 
 object PlannerFonts {

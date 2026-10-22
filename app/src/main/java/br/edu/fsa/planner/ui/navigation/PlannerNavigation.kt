@@ -49,6 +49,9 @@ import br.edu.fsa.planner.viewmodel.NowModeViewModel
 import br.edu.fsa.planner.ui.screens.now.NowModeScreen
 import br.edu.fsa.planner.ui.screens.focus.FocusScreen
 import br.edu.fsa.planner.viewmodel.FocusViewModel
+import br.edu.fsa.planner.viewmodel.ProgressViewModel
+import br.edu.fsa.planner.ui.screens.progress.ProgressScreen
+import androidx.compose.material.icons.outlined.BarChart
 import br.edu.fsa.planner.ui.screens.weekly.WeeklyScreen
 import br.edu.fsa.planner.ui.screens.monthly.MonthlyScreen
 import br.edu.fsa.planner.ui.screens.settings.SettingsScreen
@@ -73,6 +76,7 @@ private val tabs = listOf(
     PlannerTab("weekly", R.string.tab_week, Icons.Outlined.DateRange),
     PlannerTab("monthly", R.string.tab_month, Icons.Outlined.CalendarMonth),
     PlannerTab("habits", R.string.tab_habits, Icons.Outlined.CheckCircleOutline),
+    PlannerTab("progress", R.string.tab_progress, Icons.Outlined.BarChart),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -255,11 +259,17 @@ fun PlannerNavigation(container: AppContainer) {
                             planner::selectCalendarDay,
                             { planner.selectDay(it); navController.navigate("daily") { popUpTo("daily"); launchSingleTop = true } },
                             ::addItem, { navController.navigate("taskDetails/${it.id}") }, planner::toggle, planner::retryData)
-                    } else {
+                    } else if (tab.route == "habits") {
                         val state by habits.state.collectAsStateWithLifecycle()
                         HabitsScreen(state, { navController.navigate("habitEditor") },
                             { navController.navigate("habitEditor?habitId=${it.id}") }, habits::toggle,
                             { habits.moveWeek(-1) }, { habits.moveWeek(1) }, habits::currentWeek, habits::showArchived)
+                    } else {
+                        val progress: ProgressViewModel = viewModel(factory = viewModelFactory {
+                            initializer { ProgressViewModel(container.progressRepository, createSavedStateHandle()) }
+                        })
+                        val state by progress.state.collectAsStateWithLifecycle()
+                        ProgressScreen(state, progress::select)
                     }
                 }
             }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="habit_period_summary">%1$d de %2$d oportunidades no período</string>
     <string name="cadency_tagline">Organizar seus dias respeitando o seu ritmo.</string>
     <string name="settings_account">Conta</string>
     <string name="settings_appearance">Aparência</string>
@@ -108,4 +109,25 @@
     <string name="focus_end_hint">O tempo que você dedicou até aqui ficará salvo.</string>
     <string name="focus_minutes_done">%1$d minutos de foco</string>
     <string name="focus_seconds_done">%1$d segundos de foco</string>
+    <string name="rhythm_eyebrow">SEU TEMPO, SEU RITMO</string>
+    <string name="rhythm_title">Meu Ritmo</string>
+    <string name="rhythm_subtitle">Entenda sua rotina sem transformar tudo em cobrança.</string>
+    <string name="rhythm_empty">Ainda estamos conhecendo seu ritmo.</string>
+    <string name="period_days">%1$d dias</string>
+    <string name="metric_tasks">Tarefas concluídas</string>
+    <string name="metric_habits">Hábitos realizados</string>
+    <string name="metric_focus">Minutos de foco</string>
+    <string name="metric_days">Dias planejados</string>
+    <string name="chart_tasks">Tarefas concluídas por dia</string>
+    <string name="chart_focus">Minutos de foco por dia</string>
+    <string name="chart_description">%1$s. %2$s</string>
+    <string name="chart_value">%1$s · %2$d</string>
+    <string name="chart_tasks_hint">Registros antigos sem data de conclusão usam a data planejada.</string>
+    <string name="habit_consistency">Consistência dos hábitos</string>
+    <string name="habit_consistency_empty">Ao registrar seus hábitos, você começa a conhecer sua constância.</string>
+    <string name="percent_value">%1$d%%</string>
+    <string name="insight_tasks">Em %1$s você concluiu %2$d tarefas.</string>
+    <string name="insight_habits">Você realizou seus hábitos em %1$d%% das oportunidades do período.</string>
+    <string name="insight_focus">Você acumulou %1$d minutos de foco nos últimos %2$d dias.</string>
+    <string name="rhythm_encouragement">Continue no seu ritmo. Um passo de cada vez.</string>
 </resources>
