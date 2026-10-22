@@ -17,9 +17,9 @@ Os passos com Android Studio, emulador e depuração USB estão nas seções aba
 
 ## Status atual
 
-O MVP existente foi ampliado em dez fases, preservando as páginas baseadas nas referências visuais. Hábitos recorrentes, revisão de pendências, subtarefas, Modo Agora, Focus Flow, Meu Ritmo e aparência persistente são recursos funcionais com dados locais reais. Os builds e os testes de cada etapa estão registrados em [verification/CADENCY_EVOLUCAO.md](verification/CADENCY_EVOLUCAO.md), junto às decisões, migrations e limitações. A aceitação em celular físico continua recomendada.
+O MVP foi ampliado e refinado no mesmo projeto. Além do planner, hábitos, rollover, etapas e Meu Ritmo, há personalidades com fontes próprias, cor independente, heatmaps, Pomodoro e frases com API/cache offline. O registro anterior está em [verification/CADENCY_EVOLUCAO.md](verification/CADENCY_EVOLUCAO.md); a entrega atual é documentada em [verification/REFINAMENTO.md](verification/REFINAMENTO.md). A aceitação em celular físico continua recomendada.
 
-O registro original fica em [verification/VALIDACAO.md](verification/VALIDACAO.md). A validação atual está em [verification/CADENCY_EVOLUCAO.md](verification/CADENCY_EVOLUCAO.md); os relatórios gerados pelo Gradle ficam em `app/build/reports/`.
+O registro original fica em [verification/VALIDACAO.md](verification/VALIDACAO.md). A validação atual está em [verification/REFINAMENTO.md](verification/REFINAMENTO.md); os relatórios gerados pelo Gradle ficam em `app/build/reports/`.
 
 ## Funcionalidades
 
@@ -39,7 +39,12 @@ O registro original fica em [verification/VALIDACAO.md](verification/VALIDACAO.m
 - Meu Ritmo: períodos de 7/30 dias, tarefas concluídas, hábitos realizados, minutos de foco, dias planejados e gráficos acessíveis.
 - Ritmo da semana: carga das tarefas pendentes ponderada por prioridade.
 - Aparência Sistema/Claro/Escuro e estilos Cozy/Soft/Clean/Focus, combináveis e persistentes.
-- Persistência Room reativa; cadeia de migrations 1→2→3 mantém dados existentes, inclusive as marcações dos hábitos legados.
+- Personalidades com tipografia, formas, densidade, bordas, elevação, controles e composição próprias; seletor com previews reais.
+- Cor de destaque independente: sete presets ou cor personalizada por HSV/hexadecimal, com contraste adaptado a claro/escuro.
+- Mapa do seu ritmo de 12 semanas, mini mapas de quatro semanas e detalhes de hábitos com histórico, sequência e consistência.
+- Pomodoro 25/5, 50/10 ou personalizado, com ciclos, pausa longa e preferências persistentes; foco associado a tarefas ou hábitos, com confirmação antes de marcar o hábito.
+- Cadency Quote: API em português, cache Room, fallback offline, frequência/categoria, favoritas e frases próprias locais.
+- Persistência Room reativa; cadeia de migrations 1→2→3→4→5 mantém dados existentes, inclusive hábitos legados e sessões pausadas.
 - Estados de carregamento, listas vazias, erros e feedback discreto por snackbar.
 - Páginas diária e semanal com papel claro, blocos cinza, linhas finas e títulos serifados; áreas de toque e descrições acessíveis.
 
@@ -47,7 +52,7 @@ O registro original fica em [verification/VALIDACAO.md](verification/VALIDACAO.m
 
 Em áreas úteis a partir de 600 dp, as páginas usam duas colunas, como os modelos: agenda à esquerda e seções auxiliares à direita. Em celulares, as seções são empilhadas e a página rola verticalmente. A tabela de hábitos permite rolagem horizontal quando necessário para preservar o tamanho dos alvos de toque.
 
-As fontes são provisórias. `PlannerFonts` e `PlannerPaper`, em `ui/theme/PlannerTheme.kt`, centralizam famílias, estilos, cores e formas. As fontes definitivas poderão ser adicionadas em `app/src/main/res/font/` e associadas ali, sem refazer as telas.
+As fontes são distribuídas em `res/font`, sem depender de conexão. Cozy usa Fraunces/Nunito Sans; Soft, Quicksand/Nunito Sans; Clean, Manrope; Focus, IBM Plex Sans e IBM Plex Mono nos tempos. [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) contém a origem e as licenças. `CadencyPersonalityTokens` centraliza o comportamento visual, e `PlannerPaper` mantém a integração com as páginas originais.
 
 O controle de água registra de zero a oito copos por data. Os hábitos criados pelo acompanhamento semanal continuam limitados à semana escolhida; os criados na aba Hábitos podem se repetir entre semanas. As duas interfaces compartilham o mesmo histórico. Atividades/anotações, autocuidado e gratidão são campos independentes. O registro da referência original fica em [verification/REFERENCIA_VISUAL.md](verification/REFERENCIA_VISUAL.md).
 
@@ -102,15 +107,19 @@ app/
         screens/now/
         screens/focus/
         screens/progress/
+        screens/quotes/
         components/
         theme/                     # cores, tipografia, dimensões e shapes
       viewmodel/
     res/values/                    # textos em português e tema do sistema
+    res/font/                      # fontes OFL incluídas no APK
+    assets/                        # fallback de frases e licenças das fontes
   src/test/                        # regras, persistência e testes locais
   src/testDebug/                   # fluxo Compose com Robolectric
   src/androidTest/                 # fluxo essencial em dispositivo
 gradle/wrapper/
 scripts/                           # preparação e builds no Windows
+third_party/fonts/                 # licenças originais e commit de origem
 verification/                      # registro de validação
 ```
 
@@ -260,7 +269,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1 -Tasks ass
 
 Os testes cobrem calendário, intervalos semanais, filtros, validação, queries reais do Room, CRUD reativo, banco reaberto, notas/humor e sessão/logout. O teste de interface local fica em `testDebug`, pois utiliza a Activity disponibilizada por `ui-test-manifest` nessa variante. O teste instrumentado percorre o fluxo essencial e recria a Activity para verificar restauração.
 
-Na evolução Cadency, passaram **43 testes em debug e 40 em release**. O lint não apresentou erros; os avisos restantes incluem sugestões de atualização das dependências, pluralização e recursos antigos sem uso. Os resultados da interface e os detalhes da versão atual ficam em [verification/CADENCY_EVOLUCAO.md](verification/CADENCY_EVOLUCAO.md).
+No refinamento atual, passaram **60 testes em debug, 57 em release e cinco no emulador Android 15**. São 57 casos compartilhados entre as variantes e três testes adicionais de UI local em debug. O lint não apresentou erros. Os testes incluem heatmaps, regras de Pomodoro, tempo real sem pausas, frases/cache offline, favoritas, preferências e migração de uma instalação v3 para v5. Resultados e limites da validação ficam em [verification/REFINAMENTO.md](verification/REFINAMENTO.md), com [inventário dos arquivos](verification/REFINAMENTO_ARQUIVOS.md).
 
 ### Roteiro de aceitação no aparelho
 
@@ -278,27 +287,36 @@ Entre com a conta demo; crie um plano; confira a data no dia, semana e mês; edi
 | Meu Ritmo | Abra Progresso e alterne 7/30 dias. Confira tarefas, hábitos, foco e dias planejados. Toque nas barras para ver a data/valor; role para consistência e insights. Sem registros, os valores são zero e há uma mensagem de acolhimento. |
 | Aparência | Abra a engrenagem → Aparência. Combine os quatro estilos com Claro/Escuro. Em Sistema, altere o modo do dispositivo. Feche/reabra o app para conferir persistência. |
 | Ritmo semanal | Compare dias com tarefas LOW/MEDIUM/HIGH ainda abertas. Os pontos diminuem ao concluir. Não contam eventos, Inbox ou itens descartados. |
+| Personalidades e cor | Mantenha a mesma cor e troque Cozy, Soft, Clean e Focus. Compare fontes, espaço, cartões e controles. Em Focus, Hoje destaca Agora e recolhe os cuidados; eles continuam acessíveis pelo botão. Depois use Cor do Cadency → Personalizada para testar HSV ou #RRGGBB. |
+| Heatmaps | Crie hábitos diários e semanais. Faça check-ins e toque nos dias do Mapa do seu ritmo. Dias anteriores à criação ficam neutros. Metas semanais não produzem faltas por dia. Toque no nome para abrir detalhes e períodos maiores quando houver histórico. |
+| Pomodoro | No Focus Flow escolha Pomodoro e 25/5, 50/10 ou Personalizado. Configure foco/pausas/ciclos. Pause, retome e reabra o app. Ao terminar uma etapa, inicie explicitamente a próxima. Apenas tempo de foco entra em Meu Ritmo. Pela tela do hábito, use Focar neste hábito e confira a pergunta de conclusão. |
+| Frases | Em Configurações → Frases escolha tipo e frequência. Outra frase usa o cache. Favorite, reabra Frases favoritas e adicione um texto próprio. Feche/reabra offline: o card e as favoritas continuam disponíveis. |
 
 As sessões de foco registram milissegundos reais e excluem pausas. A interface de Progresso soma as sessões encerradas e mostra minutos inteiros; por isso, testes de poucos segundos podem ainda mostrar zero minutos.
 
 ## Decisões de projeto
 
 - **Compose:** permite construir telas declarativas e componentes reutilizáveis, acompanhando o estado observado sem telas XML ou várias Activities.
-- **Room:** valida consultas em compilação e emite Flows quando os dados mudam. Os schemas 1/2/3 e migrations são versionados. A migration 2→3 adiciona hábitos recorrentes/check-ins, subtarefas, sessões de foco e campos de rollover/conclusão. Subtarefas usam CASCADE; excluir uma tarefa anula sua referência na sessão de foco e preserva a sessão.
+- **Room:** valida consultas em compilação e emite Flows. Schemas 1 a 5 e migrations são versionados. A migration 2→3 adiciona os históricos do planner; 3→4 adiciona estado do Pomodoro e vínculo opcional com hábito; 4→5 adiciona frases. Excluir tarefa/hábito anula o vínculo da sessão e preserva seu título/tempo. Não há fallback destrutivo.
 - **DataStore:** mantém sessão, aparência, opção de rollover e última revisão diária de maneira assíncrona. Dados estruturados ficam no Room.
 - **Autenticação local:** permite estudar e executar o MVP offline sem configurar serviços externos. `AuthRepository` define a sessão e as operações de login/logout, isolando as credenciais da interface.
 - **Firebase no futuro:** implemente `AuthRepository` com Firebase Authentication e forneça a implementação pelo `AppContainer`. ViewModel e UI continuam consumindo o mesmo contrato. Contas reais também exigirão vincular os dados do planner ao ID do usuário e definir a estratégia de sincronização.
 - **Datas:** `java.time` calcula os períodos. Datas são persistidas como epoch day e horários como minutos desde meia-noite. A semana começa na segunda; o calendário mensal começa no domingo. Dias vizinhos completam as linhas do calendário.
 - **Para amanhã:** o atalho diário cria um item com a data real do dia seguinte. A seção mostra os planos ainda pendentes dessa data; quando o dia chega, eles aparecem normalmente na agenda correspondente.
-- **Tema:** oito paletas centralizadas em `CadencyPalette`, com dimensões, shapes e tipografia em `ui/theme`. `PlannerTheme` combina o mood visual com SYSTEM/LIGHT/DARK; SYSTEM usa `isSystemInDarkTheme`. Humor emocional do diário é um dado independente.
+- **Tema:** `PlannerPersonality`, `AccentColor` e `ThemeMode` são independentes. Tokens centralizam as diferenças; SYSTEM usa `isSystemInDarkTheme`. A preferência antiga de Mood é lida para preservar a escolha. Humor emocional do diário continua independente.
 - **Gráficos:** Canvas/Compose desenha duas séries simples sem dependência extra. Inclui dias zerados, seleção por toque, descrições acessíveis e cores do tema.
+- **Heatmaps:** intensidade baseada em ocorrências realmente previstas e check-ins únicos. Hábitos semanais flexíveis só contribuem nos dias marcados, sem obrigação diária. Antes da criação e depois do encerramento, os dias são neutros. Células possuem descrição, símbolos e seleção textual.
+- **Pomodoro:** uma sessão persistente registra fase/ciclo/configuração e timestamps. A próxima etapa começa por ação explícita; sair do app não gera foco fictício em vários ciclos. As pausas são excluídas das métricas.
+- **Frases:** [API Ferramentas da Web](https://www.ferramentasdaweb.com.br/mensagens-motivacionais/api/docs/), com HTTPS nativo/coroutines e JSON. Cache atualizado no máximo a cada 24 horas, com espera de uma hora após falha. Rotação é independente da rede e da personalidade. Disciplina é classificada localmente; a categoria não existe como endpoint na API. Preferências, favoritas e conteúdo próprio permanecem locais.
 - **Estado:** seleções de datas e rascunho do formulário usam `SavedStateHandle`; dados salvos são observados pelo Room. Logout preserva os planos da única conta local demo.
 
 ## Limitações e próximos passos
 
-O MVP tem uma conta local e categorias fixas. Não possui sincronização, cadastro real, recorrência de tarefas, alarmes, sons ou notificações. Hábitos têm recorrência própria. O timer usa timestamps persistidos: continua contando ao sair e é reconciliado ao retornar, sem serviço de primeiro plano nem aviso em segundo plano. As sessões são atribuídas ao dia de início; minutos exibidos são a soma do tempo real encerrado, arredondada para baixo por dia. Horários de compromissos pertencem ao mesmo dia. Desinstalar ou limpar os dados remove a base local; não há backup nesta versão.
+O MVP tem uma conta local e categorias fixas de tarefas. Não possui sincronização, cadastro real, recorrência de tarefas, alarmes, sons ou notificações. Hábitos têm recorrência própria. O timer usa timestamps: a etapa atual continua ao sair e é reconciliada ao retornar; a próxima etapa Pomodoro espera uma ação. Sessões são atribuídas ao dia de início; minutos são a soma do foco real encerrado, arredondada para baixo por dia. Horários de compromissos pertencem ao mesmo dia. Desinstalar ou limpar os dados remove a base local; não há backup nesta versão.
 
 Alterar a frequência de um hábito aplica a definição atual ao cálculo histórico; versionamento de agendas é uma evolução futura. Metas semanais são proporcionais aos dias elegíveis no período, arredondadas para cima; porcentagens são limitadas a 100%. Registros antigos sem data de conclusão usam a data planejada. Não há IA nem pontuação de produtividade.
+
+A disponibilidade e as atribuições das frases remotas dependem do serviço público; o Cadency preserva a autoria fornecida e mantém fallback. As personalidades usam fontes offline; o construtor de variações tipográficas fica isolado no tema. Heatmaps maiores rolam horizontalmente e têm botões para selecionar dias com precisão.
 
 Próximos passos: aceitação em celular físico, TalkBack e fonte ampliada, exportação/backup, notificações de foco e, depois, autenticação real com dados por usuário e sincronização.
 
