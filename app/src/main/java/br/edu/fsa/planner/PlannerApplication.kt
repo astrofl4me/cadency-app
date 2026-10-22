@@ -6,6 +6,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import br.edu.fsa.planner.data.local.database.PlannerDatabase
 import br.edu.fsa.planner.data.local.database.Migration2To3
+import br.edu.fsa.planner.data.local.database.Migration3To4
 import br.edu.fsa.planner.data.repository.PlannerRepository
 import br.edu.fsa.planner.data.repository.AuthRepository
 import br.edu.fsa.planner.data.repository.LocalAuthRepository
@@ -24,7 +25,7 @@ class AppContainer(context: Context, val authRepository: AuthRepository = LocalA
     val preferencesRepository = PreferencesRepository(context.sessionDataStore)
     private val database by lazy {
         Room.databaseBuilder(context.applicationContext, PlannerDatabase::class.java, "planner.db")
-            .addMigrations(PlannerDatabase.Migration1To2, Migration2To3).build()
+            .addMigrations(PlannerDatabase.Migration1To2, Migration2To3, Migration3To4).build()
     }
     val habitRepository by lazy { HabitRepository(database.habitDao()) }
     val focusRepository by lazy { FocusRepository(database.focusDao()) }

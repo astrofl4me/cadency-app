@@ -14,7 +14,7 @@ import br.edu.fsa.planner.data.local.dao.HabitDao
 import br.edu.fsa.planner.data.local.dao.FocusDao
 
 @Database(entities = [PlannerItemEntity::class, PlannerNoteEntity::class, WeeklyHabitEntity::class,
-    HabitEntity::class, HabitCheckInEntity::class, SubtaskEntity::class, FocusSessionEntity::class], version = 3, exportSchema = true)
+    HabitEntity::class, HabitCheckInEntity::class, SubtaskEntity::class, FocusSessionEntity::class], version = 4, exportSchema = true)
 @TypeConverters(PlannerConverters::class)
 abstract class PlannerDatabase : RoomDatabase() {
     abstract fun plannerDao(): PlannerDao

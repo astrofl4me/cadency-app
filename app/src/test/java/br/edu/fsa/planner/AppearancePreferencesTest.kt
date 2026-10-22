@@ -37,6 +37,8 @@ class AppearancePreferencesTest {
         preferences.setTheme(ThemeMode.DARK)
         preferences.setMood(PlannerPersonality.COZY)
         preferences.setAccent(AccentColor(0x8F315A))
+        preferences.setFocusMode(FocusMode.POMODORO)
+        preferences.setPomodoro(PomodoroConfig(50, 10, 3, 20))
         preferences.setRollover(false)
         preferences.markRolloverReviewed(LocalDate.of(2026, 10, 21))
         auth.signInDemo(); auth.signOut()
@@ -47,6 +49,8 @@ class AppearancePreferencesTest {
             assertEquals(ThemeMode.DARK, saved.themeMode)
             assertEquals(PlannerPersonality.COZY, saved.plannerPersonality)
             assertEquals(AccentColor(0x8F315A), saved.accentColor)
+            assertEquals(FocusMode.POMODORO, saved.defaultFocusMode)
+            assertEquals(PomodoroConfig(50, 10, 3, 20), saved.pomodoro)
             assertFalse(saved.gentleRolloverEnabled)
             assertEquals(LocalDate.of(2026, 10, 21), saved.lastRolloverReviewDate)
         } finally { reopenedScope.coroutineContext.job.cancelAndJoin(); file.delete() }

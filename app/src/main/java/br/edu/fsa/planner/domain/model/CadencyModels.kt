@@ -7,7 +7,8 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 enum class PlannerPersonality { COZY, SOFT, CLEAN, FOCUS }
 data class PlannerPreferences(val ready: Boolean = false, val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val plannerPersonality: PlannerPersonality = PlannerPersonality.CLEAN, val gentleRolloverEnabled: Boolean = true,
-    val lastRolloverReviewDate: LocalDate? = null, val hasError: Boolean = false, val accentColor: AccentColor = AccentColor.Default)
+    val lastRolloverReviewDate: LocalDate? = null, val hasError: Boolean = false, val accentColor: AccentColor = AccentColor.Default,
+    val defaultFocusMode: FocusMode = FocusMode.FREE, val pomodoro: PomodoroConfig = PomodoroConfig())
 
 enum class FrequencyType { DAILY, WEEKLY }
 enum class HabitIcon { WATER, BOOK, HEALTH, STUDY, CALM, CHECK }
@@ -23,7 +24,10 @@ data class Subtask(val id: Long = 0, val plannerItemId: Long, val title: String,
 enum class FocusStatus { RUNNING, PAUSED, FINISHED, STOPPED }
 data class FocusSession(val id: Long = 0, val plannerItemId: Long? = null, val title: String = "",
     val day: LocalDate, val startedAt: Long, val endedAt: Long? = null, val plannedSeconds: Int,
-    val elapsedMillis: Long = 0, val resumedAt: Long? = null, val status: FocusStatus = FocusStatus.RUNNING)
+    val elapsedMillis: Long = 0, val resumedAt: Long? = null, val status: FocusStatus = FocusStatus.RUNNING,
+    val habitId: Long? = null, val mode: FocusMode = FocusMode.FREE, val phase: FocusPhase = FocusPhase.FOCUS,
+    val cycleIndex: Int = 1, val pomodoro: PomodoroConfig = PomodoroConfig(), val phaseElapsedMillis: Long = 0,
+    val awaitingPhaseStart: Boolean = false)
 data class DailyCount(val date: LocalDate, val value: Long)
 data class SubtaskProgress(val plannerItemId: Long, val total: Int, val done: Int) {
     val fraction get() = if (total == 0) 0f else done.toFloat() / total

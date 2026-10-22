@@ -63,6 +63,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import br.edu.fsa.planner.domain.model.ItemType
+import br.edu.fsa.planner.ui.components.FocusModeSelector
+import br.edu.fsa.planner.ui.components.PomodoroConfiguration
+import br.edu.fsa.planner.ui.components.SectionTitle
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.compose.ui.platform.LocalResources
@@ -184,7 +187,11 @@ fun PlannerNavigation(container: AppContainer) {
             }
             composable("settings") {
                 session.user?.let { SettingsScreen(it, login.busy, login.error != null || settingsError,
-                    auth::signOut, preferences, settings::setTheme, settings::setPersonality, settings::setRollover, settings::setAccent) }
+                    auth::signOut, preferences, settings::setTheme, settings::setPersonality, settings::setRollover, settings::setAccent) {
+                    SectionTitle(stringResource(R.string.focus_settings))
+                    FocusModeSelector(preferences.defaultFocusMode, settings::setFocusMode)
+                    PomodoroConfiguration(preferences.pomodoro, settings::setPomodoro)
+                } }
             }
             composable("inbox") {
                 InboxScreen(rolloverState.inbox, { navController.navigate("taskDetails/${it.id}") }, rollover::schedule) { navController.popBackStack() }
@@ -195,14 +202,17 @@ fun PlannerNavigation(container: AppContainer) {
                 NowModeScreen(state, now::complete, now::skip, { navController.popBackStack() }, now::clearSkipped,
                     { navController.popBackStack() }, { navController.navigate("focusFlow?itemId=${it.id}") })
             }
-            composable("focusFlow?itemId={itemId}", arguments = listOf(navArgument("itemId") { type = NavType.LongType; defaultValue = 0L })) {
+            composable("focusFlow?itemId={itemId}&habitId={habitId}", arguments = listOf(
+                navArgument("itemId") { type = NavType.LongType; defaultValue = 0L },
+                navArgument("habitId") { type = NavType.LongType; defaultValue = 0L })) {
                 val focus: FocusViewModel = viewModel(factory = viewModelFactory {
-                    initializer { FocusViewModel(container.focusRepository, container.plannerRepository, createSavedStateHandle()) }
+                    initializer { FocusViewModel(container.focusRepository, container.plannerRepository, createSavedStateHandle(), container.preferencesRepository, container.habitRepository) }
                 })
                 val state by focus.state.collectAsStateWithLifecycle()
                 LaunchedEffect(state.taskCompleted) { if (state.taskCompleted) navController.popBackStack() }
                 FocusScreen(state, focus::choose, focus::custom, focus::customText, focus::start, focus::pause,
-                    focus::resume, focus::finish, focus::restart, focus::completeTask) { navController.popBackStack() }
+                    focus::resume, focus::finish, focus::restart, focus::completeTask,
+                    focus::mode, focus::pomodoro, focus::completeHabit, focus::dismissHabit) { navController.popBackStack() }
             }
             composable("taskDetails/{itemId}", arguments = listOf(navArgument("itemId") { type = NavType.LongType })) {
                 val details: TaskDetailsViewModel = viewModel(factory = viewModelFactory { initializer { TaskDetailsViewModel(container.plannerRepository, createSavedStateHandle()) } })
@@ -220,7 +230,8 @@ fun PlannerNavigation(container: AppContainer) {
                 val details: HabitDetailsViewModel = viewModel(factory = viewModelFactory { initializer { HabitDetailsViewModel(container.habitRepository, createSavedStateHandle()) } })
                 val state by details.state.collectAsStateWithLifecycle()
                 LaunchedEffect(state.loading, state.habit) { if (!state.loading && state.habit == null && !state.error) navController.popBackStack() }
-                HabitDetailsScreen(state, details::selectWeeks, { navController.navigate("habitEditor?habitId=${state.habit?.id ?: 0}") }, { navController.popBackStack() })
+                HabitDetailsScreen(state, details::selectWeeks, { navController.navigate("habitEditor?habitId=${state.habit?.id ?: 0}") }, { navController.popBackStack() },
+                    { navController.navigate("focusFlow?habitId=${state.habit?.id ?: 0}") })
             }
             composable("habitEditor?habitId={habitId}", arguments = listOf(navArgument("habitId") { type = NavType.LongType; defaultValue = 0L })) {
                 val editor: HabitEditorViewModel = viewModel(factory = viewModelFactory { initializer { HabitEditorViewModel(container.habitRepository, createSavedStateHandle()) } })

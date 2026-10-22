@@ -23,11 +23,22 @@ data class SubtaskEntity(@PrimaryKey(autoGenerate = true) val id: Long = 0, val 
     val title: String, val isCompleted: Boolean, val position: Int, val createdAt: Long)
 
 @Entity(tableName = "focus_sessions", foreignKeys = [ForeignKey(entity = PlannerItemEntity::class,
-    parentColumns = ["id"], childColumns = ["plannerItemId"], onDelete = ForeignKey.SET_NULL)],
-    indices = [Index("plannerItemId"), Index("day"), Index("status")])
+    parentColumns = ["id"], childColumns = ["plannerItemId"], onDelete = ForeignKey.SET_NULL),
+    ForeignKey(entity = HabitEntity::class, parentColumns = ["id"], childColumns = ["habitId"], onDelete = ForeignKey.SET_NULL)],
+    indices = [Index("plannerItemId"), Index("habitId"), Index("day"), Index("status")])
 data class FocusSessionEntity(@PrimaryKey(autoGenerate = true) val id: Long = 0, val plannerItemId: Long?,
     val title: String, val day: LocalDate, val startedAt: Long, val endedAt: Long?, val plannedSeconds: Int,
-    val elapsedMillis: Long, val resumedAt: Long?, val status: String)
+    val elapsedMillis: Long, val resumedAt: Long?, val status: String,
+    val habitId: Long? = null,
+    @ColumnInfo(defaultValue = "'FREE'") val mode: String = "FREE",
+    @ColumnInfo(defaultValue = "'FOCUS'") val phase: String = "FOCUS",
+    @ColumnInfo(defaultValue = "1") val cycleIndex: Int = 1,
+    @ColumnInfo(defaultValue = "25") val workMinutes: Int = 25,
+    @ColumnInfo(defaultValue = "5") val shortBreakMinutes: Int = 5,
+    @ColumnInfo(defaultValue = "4") val cycles: Int = 4,
+    @ColumnInfo(defaultValue = "15") val longBreakMinutes: Int = 15,
+    @ColumnInfo(defaultValue = "0") val phaseElapsedMillis: Long = 0,
+    @ColumnInfo(defaultValue = "0") val awaitingPhaseStart: Boolean = false)
 
 fun HabitEntity.toModel() = Habit(id, name, description, HabitIcon.valueOf(icon), category,
     FrequencyType.valueOf(frequencyType), targetPerPeriod,
@@ -38,6 +49,8 @@ fun Habit.toEntity() = HabitEntity(id, name, description, icon.name, category, f
     startsOn, endsOn, isArchived, position, colorKey)
 fun SubtaskEntity.toModel() = Subtask(id, plannerItemId, title, isCompleted, position, createdAt)
 fun FocusSessionEntity.toModel() = FocusSession(id, plannerItemId, title, day, startedAt, endedAt,
-    plannedSeconds, elapsedMillis, resumedAt, FocusStatus.valueOf(status))
+    plannedSeconds, elapsedMillis, resumedAt, FocusStatus.valueOf(status), habitId, FocusMode.valueOf(mode), FocusPhase.valueOf(phase),
+    cycleIndex, PomodoroConfig(workMinutes, shortBreakMinutes, cycles, longBreakMinutes), phaseElapsedMillis, awaitingPhaseStart)
 fun FocusSession.toEntity() = FocusSessionEntity(id, plannerItemId, title, day, startedAt, endedAt,
-    plannedSeconds, elapsedMillis, resumedAt, status.name)
+    plannedSeconds, elapsedMillis, resumedAt, status.name, habitId, mode.name, phase.name, cycleIndex,
+    pomodoro.focusMinutes, pomodoro.shortBreakMinutes, pomodoro.cycles, pomodoro.longBreakMinutes, phaseElapsedMillis, awaitingPhaseStart)

@@ -30,6 +30,10 @@ class HabitRepository(private val dao: HabitDao, private val clock: Clock = Cloc
         if (checked) dao.undo(id, date) else dao.checkIn(HabitCheckInEntity(habitId = id, date = date, completed = true, createdAt = clock.millis()))
     }
     suspend fun delete(id: Long) = dao.removeHabit(id)
+    suspend fun markDone(id: Long, date: LocalDate) = mutex.withLock {
+        require(HabitRules.isPlanned(checkNotNull(get(id)), date))
+        dao.checkIn(HabitCheckInEntity(habitId = id, date = date, completed = true, createdAt = clock.millis()))
+    }
     fun weekly(weekStart: LocalDate) = combine(habits, checkIns(DateInterval(weekStart, weekStart.plusDays(6)))) { rows, checks ->
         rows.filter { habit -> (0L..6L).any { HabitRules.isPlanned(habit, weekStart.plusDays(it)) } }.map { habit ->
             WeeklyHabit(habit.id, weekStart, habit.name, checks.filter { it.habitId == habit.id }.map { it.date.dayOfWeek }.toSet())

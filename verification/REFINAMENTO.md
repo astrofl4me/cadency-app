@@ -28,3 +28,34 @@ Documentação oficial consultada: [Frases Motivacionais API](https://www.ferram
 A documentação limita `/todas` a 50 itens por página e informa 60 requisições/minuto. O JSON atual tem `success`, `data` e `timestamp`; a coleção usa `data.frases`, com `frase`, `autor`, `categoria` e `data`.
 
 Categorias reais verificadas incluem **Motivação, Reflexão, Paz, Inspiração, Mudança, Oportunidade, Sonhos, Sucesso, Trabalho**, além de outras. “Disciplina” não é uma categoria oferecida; não será enviada como filtro fictício. O conteúdo é independente da personalidade visual.
+
+## Heatmaps e detalhes de hábitos
+
+`HeatmapRules` calcula uma matriz de 12 semanas (84 células), de segunda a domingo, incluindo os dias futuros da semana atual como estado próprio. O período individual oferece 3 meses e, quando o histórico permite, 6 meses/1 ano. Datas anteriores à criação, posteriores ao arquivamento e dias fora da programação ficam neutros. Mini mapas da lista mostram quatro semanas (28 células).
+
+Cada check-in é deduplicado por hábito/data. Para hábitos DAILY, o denominador é a quantidade prevista no dia. Hábitos WEEKLY flexíveis só entram no denominador nos dias com check-in; os outros dias elegíveis são neutros, sem obrigação diária. Assim o mapa não transforma a meta “3 vezes por semana” em sete faltas.
+
+Intensidades: 0, 1–25%, 26–50%, 51–75%, 76–99%, 100%. As tonalidades derivam da cor escolhida; a personalidade controla raio e espaçamento. Cada célula tem data/estado acessível. A seleção mostra os valores por texto e também pode ser percorrida pelos botões de dia anterior/seguinte. Símbolos distinguem estados sem depender só da cor.
+
+`HabitDetailsViewModel` combina definições, histórico e período, calculando consistência e sequência DAILY. A tela preserva acesso à edição, arquivamento/exclusão e foco. Os dados vêm das mesmas tabelas de hábitos/check-ins, sem nova tabela ou migration nesta fase.
+
+## Validação por fase
+
+| Fase | Resultado |
+| --- | --- |
+| Base | assembleDebug passou antes das alterações. |
+| A | assembleDebug e três testes de aparência/persistência/contraste passaram. |
+| B | assembleDebug e três testes de heatmap passaram, incluindo células neutras, futuras, percentuais e hábitos flexíveis. |
+| C | assembleDebug e testes de Pomodoro, armazenamento e preferências passaram. O teste com relógio controlado percorreu dois ciclos, pausas, reabertura do banco e pausa longa, contando só os minutos de foco. |
+
+Logs locais em `verification/local/refinement-*.log`; fontes/licenças são versionadas. O compilador Kotlin roda no processo Gradle para evitar o daemon Kotlin que não conseguia conectar no ambiente Windows; não há alteração global de Java ou de configuração do sistema.
+
+## Pomodoro e hábitos
+
+Focus Flow mantém Fluxo livre e adiciona Pomodoro 25/5, 50/10 ou configuração própria (foco, pausa curta, ciclos, pausa longa). Preferências: `default_focus_mode`, `pomodoro_focus_minutes`, `pomodoro_short_break_minutes`, `pomodoro_cycles`, `pomodoro_long_break_minutes`.
+
+`FocusRules` calcula a etapa atual; `PomodoroRules` faz foco → pausa curta → próximo ciclo e último foco → pausa longa → fim. O início da próxima etapa é explícito, sem somar ciclos inteiros enquanto o app fica fechado. Pausas manuais e pausas do Pomodoro não entram nos minutos de foco. O estado, as durações e o progresso ficam no Room, independentes de alterações futuras nas preferências.
+
+Migration **3→4** adiciona vínculo opcional `habitId` com FK SET_NULL, modo, fase, ciclo, durações e tempo da fase. Sessões antigas são Fluxo livre e preservam o tempo já registrado. Excluir um hábito mantém o histórico de foco e o título original. A tarefa e o hábito são vínculos alternativos, não simultâneos.
+
+Ao encerrar uma sessão de hábito com tempo registrado e ocorrência prevista hoje, o app pergunta se deseja marcar o hábito. “Agora não” não altera check-ins; confirmar usa uma operação idempotente. O hábito nunca é concluído automaticamente.

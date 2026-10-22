@@ -61,7 +61,7 @@ object PlannerDimens {
     val PaperWeekdayWidth = 84.dp
     val PaperDot = 10.dp
     val PaperMood = 28.dp
-    val FocusTimer = 220.dp
+    val FocusTimer @Composable get() = if (LocalCadencyPersonality.current.quietNavigation) 260.dp else 240.dp
     val ChartHeight = 132.dp
 }
 

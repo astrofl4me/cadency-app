@@ -1,5 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="focus_free_mode">Fluxo livre</string>
+    <string name="pomodoro">Pomodoro</string>
+    <string name="focus_settings">Foco</string>
+    <string name="pomodoro_preset">%1$d / %2$d</string>
+    <string name="pomodoro_summary">%1$d min de foco · %2$d min de pausa · %3$d ciclos · pausa longa de %4$d min</string>
+    <string name="pomodoro_custom">Seu Pomodoro</string>
+    <string name="pomodoro_work">Foco em minutos</string>
+    <string name="pomodoro_short">Pausa curta em minutos</string>
+    <string name="pomodoro_cycles">Quantidade de ciclos</string>
+    <string name="pomodoro_long">Pausa longa em minutos</string>
+    <string name="pomodoro_invalid">Foco: 1–180 min. Pausa curta: 1–60 min. Ciclos: 1–12. Pausa longa: 1–120 min.</string>
+    <string name="pomodoro_phase_focus">FOCO</string>
+    <string name="pomodoro_phase_short">PAUSA CURTA</string>
+    <string name="pomodoro_phase_long">PAUSA LONGA</string>
+    <string name="pomodoro_cycle_count">Ciclo %1$d de %2$d</string>
+    <string name="pomodoro_rest_hint">Levante um pouco. Você volta já.</string>
+    <string name="pomodoro_start_cycle">Iniciar próximo foco</string>
+    <string name="pomodoro_start_break">Começar pausa</string>
+    <string name="habit_focus_finished">Um tempo para seu ritmo</string>
+    <string name="habit_focus_question">Quer marcar “%1$s” como concluído hoje?</string>
+    <string name="habit_focus_mark">Marcar como feito</string>
     <string name="heatmap_title">Mapa do seu ritmo</string>
     <string name="heatmap_subtitle">Um pouco de cada vez também conta.</string>
     <string name="heatmap_previous">Dia anterior</string>

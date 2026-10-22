@@ -26,8 +26,41 @@ class CadencyStorageTest {
     private val name = "cadency-${UUID.randomUUID()}.db"
     private var db = open()
     private fun open() = Room.databaseBuilder(context, PlannerDatabase::class.java, name)
-        .addMigrations(PlannerDatabase.Migration1To2, Migration2To3).build()
+        .addMigrations(PlannerDatabase.Migration1To2, Migration2To3, Migration3To4).build()
     @After fun close() { db.close(); context.deleteDatabase(name) }
+    @Test fun pomodoroPersistsPhasesAndCountsOnlyWorkNotBreaks() = runBlocking {
+        class TestClock(var value: Long) : Clock() {
+            override fun getZone(): ZoneId = ZoneOffset.UTC
+            override fun withZone(zone: ZoneId): Clock = this
+            override fun instant(): Instant = Instant.ofEpochMilli(value)
+        }
+        val today = LocalDate.of(2026, 10, 22)
+        val clock = TestClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC).toEpochMilli())
+        var focus = FocusRepository(db.focusDao(), clock)
+        val habits = HabitRepository(db.habitDao(), clock)
+        val habit = habits.save(Habit(name = "Ler", startsOn = today))
+        val id = focus.start(null, "Ler", 1, habit, FocusMode.POMODORO, PomodoroConfig(1, 1, 2, 1))
+        clock.value += 30000; focus.pause(id); clock.value += 120000; focus.resume(id)
+        clock.value += 30000; focus.advance(id)
+        assertEquals(FocusPhase.SHORT_BREAK, focus.get(id)!!.phase)
+        assertEquals(60000, focus.get(id)!!.elapsedMillis)
+        clock.value += 180000; focus.resume(id); clock.value += 60000; focus.advance(id)
+        assertEquals(2, focus.get(id)!!.cycleIndex)
+        db.close(); db = open(); focus = FocusRepository(db.focusDao(), clock)
+        assertTrue(focus.get(id)!!.awaitingPhaseStart)
+        focus.resume(id); clock.value += 60000; focus.advance(id)
+        assertEquals(FocusPhase.LONG_BREAK, focus.get(id)!!.phase)
+        focus.resume(id); clock.value += 60000; focus.advance(id)
+        assertEquals(FocusStatus.FINISHED, focus.get(id)!!.status)
+        assertEquals(2L, focus.minutes(DateInterval(today, today)).first().single().value)
+        assertTrue(HabitRepository(db.habitDao()).history(habit).first().isEmpty())
+        HabitRepository(db.habitDao()).markDone(habit, today)
+        HabitRepository(db.habitDao()).markDone(habit, today)
+        assertEquals(1, HabitRepository(db.habitDao()).history(habit).first().size)
+        HabitRepository(db.habitDao()).delete(habit)
+        assertNull(focus.get(id)!!.habitId)
+        assertEquals("Ler", focus.get(id)!!.title)
+    }
     @Test fun progressUsesCompletionDatesScheduledHabitsAndActualFocus() = runBlocking {
         val today = LocalDate.of(2026, 10, 21)
         val clock = Clock.fixed(today.atTime(12, 0).toInstant(ZoneOffset.UTC), ZoneOffset.UTC)

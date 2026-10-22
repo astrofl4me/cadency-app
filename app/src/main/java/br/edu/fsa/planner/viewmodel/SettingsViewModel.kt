@@ -16,6 +16,8 @@ class SettingsViewModel(private val repository: PreferencesRepository) : ViewMod
     fun setMood(value: PlannerPersonality) = change { repository.setMood(value) }
     fun setPersonality(value: PlannerPersonality) = change { repository.setPersonality(value) }
     fun setAccent(value: AccentColor) = change { repository.setAccent(value) }
+    fun setFocusMode(value: FocusMode) = change { repository.setFocusMode(value) }
+    fun setPomodoro(value: PomodoroConfig) = change { repository.setPomodoro(value) }
     fun setRollover(value: Boolean) = change { repository.setRollover(value) }
     private fun change(action: suspend () -> Unit) { viewModelScope.launch {
         try { action(); _writeError.value = false }
