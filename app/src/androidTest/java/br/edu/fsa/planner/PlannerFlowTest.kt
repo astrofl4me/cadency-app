@@ -95,7 +95,11 @@ class PlannerFlowTest {
         compose.onNodeWithContentDescription("Excluir plano").performClick()
         compose.onNodeWithText("Excluir").performSemanticsAction(SemanticsActions.OnClick) { it() }
         compose.waitUntil(10_000) { compose.onAllNodesWithText(editedTitle).fetchSemanticsNodes().isEmpty() }
-        compose.onNodeWithContentDescription("Registrar 4 copos de água").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Registrar 3 copos de água").performScrollTo()
+        val hadThreeGlasses = compose.onAllNodesWithText("3 de 8").fetchSemanticsNodes().isNotEmpty()
+        compose.onNodeWithContentDescription("Registrar 3 copos de água").performClick()
+        waitFor(if (hadThreeGlasses) "2 de 8" else "3 de 8")
+        compose.onNodeWithContentDescription("Registrar 4 copos de água").performClick()
         waitFor("4 de 8")
         compose.onNodeWithTag("planner-paper-page").performScrollToNode(hasContentDescription("Editar Hoje eu agradeço por"))
         compose.onNodeWithContentDescription("Editar Hoje eu agradeço por")
