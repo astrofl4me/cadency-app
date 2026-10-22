@@ -1,6 +1,9 @@
 package br.edu.fsa.planner.ui.components
+import br.edu.fsa.planner.ui.components.CadencyOutlinedButton as OutlinedButton
+import br.edu.fsa.planner.ui.components.CadencyCheckbox as Checkbox
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
@@ -19,6 +22,7 @@ import androidx.compose.ui.platform.testTag
 import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.*
 import br.edu.fsa.planner.ui.theme.PlannerDimens as D
+import br.edu.fsa.planner.ui.theme.LocalCadencyPersonality
 
 @Composable
 fun PlannerHeader(eyebrow: String, title: String, subtitle: String) {
@@ -34,6 +38,7 @@ fun PlannerHeader(eyebrow: String, title: String, subtitle: String) {
 @Composable
 fun DateNavigator(previousDescription: String, nextDescription: String, currentLabel: String,
                   onPrevious: () -> Unit, onNext: () -> Unit, onCurrent: () -> Unit) {
+    CadencySurface(Modifier.fillMaxWidth()) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         IconButton(onClick = onPrevious, modifier = Modifier.size(D.Touch)) {
             Icon(Icons.AutoMirrored.Outlined.KeyboardArrowLeft, previousDescription)
@@ -44,11 +49,14 @@ fun DateNavigator(previousDescription: String, nextDescription: String, currentL
             Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, nextDescription)
         }
     }
+    }
 }
 
 @Composable
 fun SectionTitle(title: String, count: Int? = null, onAdd: (() -> Unit)? = null) {
     Row(Modifier.fillMaxWidth().heightIn(min = D.Touch), verticalAlignment = Alignment.CenterVertically) {
+        val marker = LocalCadencyPersonality.current.sectionMarker
+        if (marker > D.None) Box(Modifier.width(marker).height(D.Icon).background(MaterialTheme.colorScheme.primary))
         Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
         if (count != null && count > 0) Text(count.toString(), style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -84,9 +92,11 @@ fun PlannerItemRow(item: PlannerItem, onToggle: () -> Unit, onEdit: () -> Unit, 
 
 @Composable
 fun EmptyState(message: String, action: String? = null, onAction: (() -> Unit)? = null) {
-    Column(Modifier.fillMaxWidth().padding(vertical = D.Medium), verticalArrangement = Arrangement.spacedBy(D.Small)) {
+    CadencySurface(Modifier.fillMaxWidth()) {
+    Column(Modifier.fillMaxWidth().padding(D.Medium), verticalArrangement = Arrangement.spacedBy(D.Small)) {
         Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
         if (action != null && onAction != null) OutlinedButton(onClick = onAction) { Text(action) }
+    }
     }
 }
 

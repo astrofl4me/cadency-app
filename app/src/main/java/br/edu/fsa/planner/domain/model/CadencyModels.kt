@@ -4,10 +4,10 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
-enum class PlannerMood { COZY, SOFT, CLEAN, FOCUS }
+enum class PlannerPersonality { COZY, SOFT, CLEAN, FOCUS }
 data class PlannerPreferences(val ready: Boolean = false, val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val plannerMood: PlannerMood = PlannerMood.CLEAN, val gentleRolloverEnabled: Boolean = true,
-    val lastRolloverReviewDate: LocalDate? = null, val hasError: Boolean = false)
+    val plannerPersonality: PlannerPersonality = PlannerPersonality.CLEAN, val gentleRolloverEnabled: Boolean = true,
+    val lastRolloverReviewDate: LocalDate? = null, val hasError: Boolean = false, val accentColor: AccentColor = AccentColor.Default)
 
 enum class FrequencyType { DAILY, WEEKLY }
 enum class HabitIcon { WATER, BOOK, HEALTH, STUDY, CALM, CHECK }

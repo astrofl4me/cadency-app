@@ -1,4 +1,5 @@
 package br.edu.fsa.planner.ui.components
+import br.edu.fsa.planner.ui.components.CadencyCheckbox as Checkbox
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +21,7 @@ import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.PlannerItem
 import br.edu.fsa.planner.domain.model.SubtaskProgress
 import br.edu.fsa.planner.ui.theme.PlannerPaper as Paper
+import br.edu.fsa.planner.ui.theme.LocalCadencyPersonality
 import br.edu.fsa.planner.ui.theme.PlannerDimens as D
 
 @Composable
@@ -67,6 +69,7 @@ fun PaperSectionHeading(title: String, onAdd: (() -> Unit)? = null) {
 
 @Composable
 fun PaperRules(count: Int, modifier: Modifier = Modifier) {
+    if (!LocalCadencyPersonality.current.paperRules) return
     Column(modifier) {
         repeat(count) { Box(Modifier.fillMaxWidth().height(D.PaperRuleHeight), contentAlignment = Alignment.BottomCenter) {
             HorizontalDivider(color = Paper.Rule)
@@ -98,8 +101,8 @@ fun PaperItemRow(item: PlannerItem, onToggle: () -> Unit, onEdit: () -> Unit, pr
 fun PaperItemSection(title: String, items: List<PlannerItem>, shaded: Boolean = false, minimumRows: Int = 3,
                      emptyMessage: String? = null, onAdd: () -> Unit, onToggle: (PlannerItem) -> Unit,
                      onEdit: (PlannerItem) -> Unit, progress: Map<Long, SubtaskProgress> = emptyMap()) {
-    Column(Modifier.fillMaxWidth().clip(Paper.Shape)
-        .background(if (shaded) Paper.Panel else Paper.Background).padding(horizontal = D.Medium, vertical = D.Tiny)) {
+    CadencySurface(Modifier.fillMaxWidth(), emphasized = shaded) {
+    Column(Modifier.padding(horizontal = D.Medium, vertical = D.Tiny)) {
         PaperSectionHeading(title, onAdd)
         items.forEach { item -> PaperItemRow(item, { onToggle(item) }, { onEdit(item) }, progress[item.id]) }
         if (items.isEmpty()) {
@@ -111,6 +114,7 @@ fun PaperItemSection(title: String, items: List<PlannerItem>, shaded: Boolean = 
         }
         PaperRules((minimumRows - items.size.coerceAtLeast(1)).coerceAtLeast(0))
         Spacer(Modifier.height(D.Medium))
+    }
     }
 }
 

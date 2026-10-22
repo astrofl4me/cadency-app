@@ -1,4 +1,5 @@
 package br.edu.fsa.planner.ui.screens.daily
+import br.edu.fsa.planner.ui.components.CadencyOutlinedButton as OutlinedButton
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,6 +18,11 @@ import br.edu.fsa.planner.domain.model.*
 import br.edu.fsa.planner.ui.components.*
 import br.edu.fsa.planner.ui.theme.PlannerDimens as D
 import br.edu.fsa.planner.ui.theme.PlannerPaper as Paper
+import br.edu.fsa.planner.ui.theme.LocalCadencyPersonality
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import br.edu.fsa.planner.viewmodel.DailyUiState
 import java.time.LocalDate
 
@@ -27,6 +33,8 @@ fun DailyScreen(state: DailyUiState, onPrevious: () -> Unit, onNext: () -> Unit,
                 onReview: (() -> Unit)? = null, onInbox: (() -> Unit)? = null, pendingCount: Int = 0, inboxCount: Int = 0,
                 onNow: (() -> Unit)? = null, onFocus: (() -> Unit)? = null) {
     var editing by rememberSaveable(state.date.toString()) { mutableStateOf<DailyNoteField?>(null) }
+    val visual = LocalCadencyPersonality.current
+    var journalVisible by rememberSaveable { mutableStateOf(false) }
     val priorities = state.items.filter { it.type == ItemType.PRIORITY || it.priority == Priority.HIGH }
     val agenda = state.items.filterNot { it in priorities }
     Box(Modifier.fillMaxSize().background(Paper.Background), contentAlignment = Alignment.TopCenter) {
@@ -40,12 +48,23 @@ fun DailyScreen(state: DailyUiState, onPrevious: () -> Unit, onNext: () -> Unit,
                 PaperWeekStrip(state.date)
                 DateNavigator(stringResource(R.string.previous_day), stringResource(R.string.next_day), stringResource(R.string.back_today),
                     onPrevious, onNext, onToday)
+                if (visual.prioritizeNow && onNow != null) {
+                    val current = NowRules.ordered(state.items, java.time.LocalDateTime.now()).firstOrNull()
+                    CadencySurface(Modifier.fillMaxWidth(), emphasized = true) {
+                        Column(Modifier.padding(D.Large), verticalArrangement = Arrangement.spacedBy(D.Small)) {
+                            Text(stringResource(R.string.current_plan), style = Paper.Label)
+                            current?.let { Text(it.title, style = Paper.Title) }
+                            CadencyButton(onNow, Modifier.fillMaxWidth()) { Text(stringResource(R.string.enter_now)) }
+                            if (onFocus != null) TextButton(onClick = onFocus) { Text(stringResource(R.string.focus_flow)) }
+                        }
+                    }
+                }
                 if (pendingCount > 0 && onReview != null) TextButton(onClick = onReview) { Text(stringResource(R.string.rollover_review_count, pendingCount)) }
                 if (onInbox != null) TextButton(onClick = onInbox) { Text(stringResource(R.string.inbox_count, inboxCount)) }
-                if (onNow != null) androidx.compose.material3.OutlinedButton(onClick = onNow, modifier = Modifier.fillMaxWidth()) {
+                if (onNow != null && !visual.prioritizeNow) OutlinedButton(onClick = onNow, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.enter_now))
                 }
-                if (onFocus != null) TextButton(onClick = onFocus) { Text(stringResource(R.string.focus_flow)) }
+                if (onFocus != null && !visual.prioritizeNow) TextButton(onClick = onFocus) { Text(stringResource(R.string.focus_flow)) }
             }
             if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             else if (state.hasError) item { DataError(onRetry) }

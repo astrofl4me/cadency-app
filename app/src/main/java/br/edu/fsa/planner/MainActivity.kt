@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settings: SettingsViewModel = viewModel(factory = viewModelFactory { initializer { SettingsViewModel(container.preferencesRepository) } })
             val preferences by settings.preferences.collectAsStateWithLifecycle()
-            if (preferences.ready) PlannerTheme(preferences.themeMode, preferences.plannerMood) {
+            if (preferences.ready) PlannerTheme(preferences.themeMode, preferences.plannerPersonality, preferences.accentColor) {
                 val light = MaterialTheme.colorScheme.background.luminance() > 0.5f
                 SideEffect { WindowCompat.getInsetsController(window, window.decorView).apply {
                     isAppearanceLightStatusBars = light; isAppearanceLightNavigationBars = light

@@ -151,9 +151,9 @@ class CadencyFlowTest {
         try {
             listOf(ThemeMode.LIGHT, ThemeMode.DARK).forEach { mode ->
                 click(if (mode == ThemeMode.LIGHT) "Claro" else "Escuro")
-                PlannerMood.entries.forEach { mood ->
+                PlannerPersonality.entries.forEach { mood ->
                     click(mood.name.lowercase().replaceFirstChar { it.uppercaseChar() })
-                    compose.waitUntil(10000) { runBlocking { preferences.preferences.first().plannerMood == mood } }
+                    compose.waitUntil(10000) { runBlocking { preferences.preferences.first().plannerPersonality == mood } }
                     val bitmap = screenshot("${mood.name.lowercase()}-${mode.name.lowercase()}")
                     assertEquals(cadencyColors(mood, mode == ThemeMode.DARK).background.toArgb(), bitmap.getPixel(4, bitmap.height / 2))
                     bitmap.recycle()
@@ -163,7 +163,7 @@ class CadencyFlowTest {
             waitFor("Do seu jeito")
             compose.onNodeWithText("Escuro").performScrollTo().assertIsSelected()
             compose.onNodeWithText("Focus").performScrollTo().assertIsSelected()
-        } finally { runBlocking { preferences.setTheme(original.themeMode); preferences.setMood(original.plannerMood) } }
+        } finally { runBlocking { preferences.setTheme(original.themeMode); preferences.setMood(original.plannerPersonality) } }
     }
 }
 

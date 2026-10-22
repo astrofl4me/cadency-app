@@ -13,7 +13,9 @@ class SettingsViewModel(private val repository: PreferencesRepository) : ViewMod
     private val _writeError = MutableStateFlow(false)
     val writeError = _writeError.asStateFlow()
     fun setTheme(value: ThemeMode) = change { repository.setTheme(value) }
-    fun setMood(value: PlannerMood) = change { repository.setMood(value) }
+    fun setMood(value: PlannerPersonality) = change { repository.setMood(value) }
+    fun setPersonality(value: PlannerPersonality) = change { repository.setPersonality(value) }
+    fun setAccent(value: AccentColor) = change { repository.setAccent(value) }
     fun setRollover(value: Boolean) = change { repository.setRollover(value) }
     private fun change(action: suspend () -> Unit) { viewModelScope.launch {
         try { action(); _writeError.value = false }

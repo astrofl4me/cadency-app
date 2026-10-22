@@ -60,17 +60,17 @@ class PlannerUiHostTest {
                     if (night.value) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
             }
             CompositionLocalProvider(LocalConfiguration provides configuration) {
-                PlannerTheme(mode.value, PlannerMood.COZY) {
+                PlannerTheme(mode.value, PlannerPersonality.COZY) {
                     val color = MaterialTheme.colorScheme.background
                     SideEffect { background = color }
                     Text("Cadency")
                 }
             }
         }
-        compose.runOnIdle { org.junit.Assert.assertEquals(cadencyColors(PlannerMood.COZY, false).background, background); night.value = true }
-        compose.runOnIdle { org.junit.Assert.assertEquals(cadencyColors(PlannerMood.COZY, true).background, background); mode.value = ThemeMode.LIGHT }
-        compose.runOnIdle { org.junit.Assert.assertEquals(cadencyColors(PlannerMood.COZY, false).background, background); mode.value = ThemeMode.DARK; night.value = false }
-        compose.runOnIdle { org.junit.Assert.assertEquals(cadencyColors(PlannerMood.COZY, true).background, background) }
+        compose.runOnIdle { org.junit.Assert.assertEquals(cadencyColors(PlannerPersonality.COZY, false).background, background); night.value = true }
+        compose.runOnIdle { org.junit.Assert.assertEquals(cadencyColors(PlannerPersonality.COZY, true).background, background); mode.value = ThemeMode.LIGHT }
+        compose.runOnIdle { org.junit.Assert.assertEquals(cadencyColors(PlannerPersonality.COZY, false).background, background); mode.value = ThemeMode.DARK; night.value = false }
+        compose.runOnIdle { org.junit.Assert.assertEquals(cadencyColors(PlannerPersonality.COZY, true).background, background) }
     }
 
     private fun waitFor(text: String) {

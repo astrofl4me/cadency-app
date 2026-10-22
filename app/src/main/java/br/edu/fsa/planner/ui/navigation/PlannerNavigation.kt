@@ -69,6 +69,7 @@ import androidx.compose.runtime.remember
 import java.time.LocalDate
 import br.edu.fsa.planner.ui.theme.PlannerDimens as D
 import br.edu.fsa.planner.ui.theme.PlannerPaper as Paper
+import br.edu.fsa.planner.ui.theme.LocalCadencyPersonality
 
 private data class PlannerTab(val route: String, val label: Int, val icon: ImageVector)
 private val tabs = listOf(
@@ -82,6 +83,7 @@ private val tabs = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlannerNavigation(container: AppContainer) {
+    val visual = LocalCadencyPersonality.current
     val habits: HabitsViewModel = viewModel(factory = viewModelFactory { initializer { HabitsViewModel(container.habitRepository, createSavedStateHandle()) } })
     val settings: SettingsViewModel = viewModel(factory = viewModelFactory { initializer { SettingsViewModel(container.preferencesRepository) } })
     val preferences by settings.preferences.collectAsStateWithLifecycle()
@@ -139,7 +141,7 @@ fun PlannerNavigation(container: AppContainer) {
     }
     Scaffold(topBar = {
         if (session.user != null && tabs.any { it.route == entry?.destination?.route }) {
-            TopAppBar(title = { Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleMedium) }, actions = {
+            TopAppBar(title = { Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge) }, actions = {
                 IconButton(onClick = { navController.navigate("settings") }) { Icon(Icons.Outlined.Settings, stringResource(R.string.open_settings)) }
             })
         } else if (entry?.destination?.route == "settings") CadencyTopBar(stringResource(R.string.open_settings)) { navController.popBackStack() }
@@ -147,15 +149,16 @@ fun PlannerNavigation(container: AppContainer) {
         if (session.user != null && entry?.destination?.route in listOf("daily", "weekly", "monthly")) {
             FloatingActionButton(onClick = { addItem(when (entry?.destination?.route) {
                 "weekly" -> planner.weekAddDate(); "monthly" -> planner.monthAddDate(); else -> planner.currentDay()
-            }, ItemType.TASK) }, containerColor = Paper.Ink, contentColor = Paper.Background) {
+            }, ItemType.TASK) }, shape = visual.controlShape, containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary) {
                 Icon(Icons.Outlined.Add, stringResource(R.string.add_item))
             }
         }
     }, bottomBar = {
         if (session.user != null && tabs.any { it.route == entry?.destination?.route }) NavigationBar(
-            containerColor = Paper.Background, tonalElevation = D.None) {
+            containerColor = Paper.Background, tonalElevation = visual.elevation) {
             tabs.forEach { tab ->
                 NavigationBarItem(
+                    alwaysShowLabel = !visual.quietNavigation,
                     selected = entry?.destination?.route == tab.route,
                     onClick = { if (tab.route == "daily") planner.goToday(); navController.navigate(tab.route) {
                         popUpTo("daily") { saveState = true }
@@ -180,7 +183,7 @@ fun PlannerNavigation(container: AppContainer) {
             }
             composable("settings") {
                 session.user?.let { SettingsScreen(it, login.busy, login.error != null || settingsError,
-                    auth::signOut, preferences, settings::setTheme, settings::setMood, settings::setRollover) }
+                    auth::signOut, preferences, settings::setTheme, settings::setPersonality, settings::setRollover, settings::setAccent) }
             }
             composable("inbox") {
                 InboxScreen(rolloverState.inbox, { navController.navigate("taskDetails/${it.id}") }, rollover::schedule) { navController.popBackStack() }

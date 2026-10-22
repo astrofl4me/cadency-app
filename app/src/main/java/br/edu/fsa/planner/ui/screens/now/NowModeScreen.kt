@@ -1,4 +1,6 @@
 package br.edu.fsa.planner.ui.screens.now
+import br.edu.fsa.planner.ui.components.CadencyButton as Button
+import br.edu.fsa.planner.ui.components.CadencyOutlinedButton as OutlinedButton
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState

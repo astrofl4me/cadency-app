@@ -7,8 +7,11 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.foundation.isSystemInDarkTheme
 import br.edu.fsa.planner.domain.model.ThemeMode
-import br.edu.fsa.planner.domain.model.PlannerMood
+import br.edu.fsa.planner.domain.model.PlannerPersonality
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import br.edu.fsa.planner.domain.model.AccentColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -35,11 +38,11 @@ object PlannerColors {
 object PlannerDimens {
     val None = 0.dp
     val Tiny = 4.dp
-    val Small = 8.dp
-    val Medium = 12.dp
-    val Large = 16.dp
-    val Page = 24.dp
-    val Section = 32.dp
+    val Small @Composable get() = LocalCadencyPersonality.current.spacing.small
+    val Medium @Composable get() = LocalCadencyPersonality.current.spacing.medium
+    val Large @Composable get() = LocalCadencyPersonality.current.spacing.large
+    val Page @Composable get() = LocalCadencyPersonality.current.spacing.page
+    val Section @Composable get() = LocalCadencyPersonality.current.spacing.section
     val Hero = 48.dp
     val Touch = 48.dp
     val CalendarCell = 52.dp
@@ -63,8 +66,8 @@ object PlannerDimens {
 }
 
 object PlannerFonts {
-    val Heading = FontFamily.Serif
-    val Body = FontFamily.SansSerif
+    val Heading @Composable get() = MaterialTheme.typography.headlineMedium.fontFamily
+    val Body @Composable get() = MaterialTheme.typography.bodyMedium.fontFamily
 }
 
 object PlannerPaper {
@@ -76,39 +79,19 @@ object PlannerPaper {
     val Marker @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
     val Selected @Composable get() = MaterialTheme.colorScheme.primaryContainer
     val Shape @Composable get() = MaterialTheme.shapes.small
-    val Title = TextStyle(fontFamily = PlannerFonts.Heading, fontSize = 30.sp, lineHeight = 38.sp)
-    val Label = TextStyle(fontFamily = PlannerFonts.Body, fontSize = 11.sp, lineHeight = 16.sp,
-        fontWeight = FontWeight.Medium, letterSpacing = 1.sp)
-    val Body = TextStyle(fontFamily = PlannerFonts.Body, fontSize = 14.sp, lineHeight = 22.sp)
-    val Caption = TextStyle(fontFamily = PlannerFonts.Body, fontSize = 12.sp, lineHeight = 18.sp)
-    val TimerText = TextStyle(fontFamily = PlannerFonts.Heading, fontSize = 48.sp, lineHeight = 56.sp)
+    val Title @Composable get() = MaterialTheme.typography.headlineMedium
+    val Label @Composable get() = MaterialTheme.typography.labelSmall
+    val Body @Composable get() = MaterialTheme.typography.bodyMedium
+    val Caption @Composable get() = MaterialTheme.typography.bodySmall
+    val TimerText @Composable get() = LocalCadencyPersonality.current.timer
 }
 
-private val Type = Typography(
-    headlineLarge = TextStyle(fontFamily = PlannerFonts.Heading, fontWeight = FontWeight.Normal, fontSize = 34.sp, lineHeight = 40.sp),
-    headlineMedium = TextStyle(fontFamily = PlannerFonts.Heading, fontWeight = FontWeight.Normal, fontSize = 28.sp, lineHeight = 34.sp),
-    headlineSmall = TextStyle(fontFamily = PlannerFonts.Heading, fontWeight = FontWeight.Normal, fontSize = 24.sp, lineHeight = 30.sp),
-    titleLarge = TextStyle(fontFamily = PlannerFonts.Body, fontWeight = FontWeight.Medium, fontSize = 21.sp, lineHeight = 28.sp),
-    titleMedium = TextStyle(fontFamily = PlannerFonts.Body, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 24.sp),
-    titleSmall = TextStyle(fontFamily = PlannerFonts.Body, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, lineHeight = 20.sp),
-    bodyLarge = TextStyle(fontFamily = PlannerFonts.Body, fontSize = 16.sp, lineHeight = 24.sp),
-    bodyMedium = TextStyle(fontFamily = PlannerFonts.Body, fontSize = 14.sp, lineHeight = 21.sp),
-    bodySmall = TextStyle(fontFamily = PlannerFonts.Body, fontSize = 12.sp, lineHeight = 18.sp),
-    labelLarge = TextStyle(fontFamily = PlannerFonts.Body, fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
-    labelMedium = TextStyle(fontFamily = PlannerFonts.Body, fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 18.sp),
-    labelSmall = TextStyle(fontFamily = PlannerFonts.Body, fontWeight = FontWeight.Medium, fontSize = 11.sp, lineHeight = 16.sp),
-)
-
 @Composable
-fun PlannerTheme(themeMode: ThemeMode = ThemeMode.SYSTEM, mood: PlannerMood = PlannerMood.CLEAN, content: @Composable () -> Unit) {
+fun PlannerTheme(themeMode: ThemeMode = ThemeMode.SYSTEM, mood: PlannerPersonality = PlannerPersonality.CLEAN,
+                 accentColor: AccentColor = AccentColor.Default, content: @Composable () -> Unit) {
     val dark = when (themeMode) { ThemeMode.SYSTEM -> isSystemInDarkTheme(); ThemeMode.LIGHT -> false; ThemeMode.DARK -> true }
-    val corners = when (mood) { PlannerMood.COZY -> PlannerDimens.Medium; PlannerMood.SOFT -> PlannerDimens.Large;
-        PlannerMood.CLEAN -> PlannerDimens.Tiny; PlannerMood.FOCUS -> PlannerDimens.Tiny }
-    MaterialTheme(colorScheme = cadencyColors(mood, dark), typography = Type, shapes = Shapes(
-        extraSmall = RoundedCornerShape(PlannerDimens.Tiny),
-        small = RoundedCornerShape(corners),
-        medium = RoundedCornerShape(corners),
-        large = RoundedCornerShape(corners + PlannerDimens.Small),
-        extraLarge = RoundedCornerShape(PlannerDimens.Page),
-    ), content = content)
+    val tokens = remember(mood) { personalityTokens(mood) }
+    CompositionLocalProvider(LocalCadencyPersonality provides tokens) {
+        MaterialTheme(colorScheme = cadencyColors(mood, dark, accentColor), typography = tokens.typography, shapes = tokens.shapes, content = content)
+    }
 }

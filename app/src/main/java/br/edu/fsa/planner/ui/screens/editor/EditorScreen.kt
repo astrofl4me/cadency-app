@@ -1,4 +1,6 @@
 package br.edu.fsa.planner.ui.screens.editor
+import br.edu.fsa.planner.ui.components.CadencyButton as Button
+import br.edu.fsa.planner.ui.components.CadencyOutlinedButton as OutlinedButton
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*

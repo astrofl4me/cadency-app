@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="personality_title">Personalidade</string>
+    <string name="preview_today">Seu dia, com calma</string>
+    <string name="preview_task">Um pequeno passo</string>
+    <string name="preview_button">Começar</string>
+    <string name="accent_title">Cor do Cadency</string>
+    <string name="accent_custom">Personalizada · %1$s</string>
+    <string name="accent_picker">Escolha sua cor</string>
+    <string name="accent_hue">Matiz</string>
+    <string name="accent_saturation">Saturação</string>
+    <string name="accent_brightness">Luminosidade</string>
+    <string name="accent_hex">Hexadecimal #RRGGBB</string>
+    <string name="accent_invalid">Use seis dígitos, por exemplo #5B735B.</string>
+    <string name="accent_sage">Sálvia</string>
+    <string name="accent_terracotta">Terracota</string>
+    <string name="accent_lavender">Lavanda</string>
+    <string name="accent_blue">Azul</string>
+    <string name="accent_rose">Rosa</string>
+    <string name="accent_amber">Âmbar</string>
+    <string name="accent_graphite">Grafite</string>
+    <string name="secondary_journal">Diário e cuidados</string>
+    <string name="current_plan">Uma coisa de cada vez</string>
+</resources>

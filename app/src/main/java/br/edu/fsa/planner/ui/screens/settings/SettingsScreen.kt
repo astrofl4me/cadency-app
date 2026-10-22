@@ -1,4 +1,5 @@
 package br.edu.fsa.planner.ui.screens.settings
+import br.edu.fsa.planner.ui.components.CadencyOutlinedButton as OutlinedButton
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,7 +24,7 @@ import br.edu.fsa.planner.ui.theme.PlannerDimens as D
 @Composable
 fun SettingsScreen(user: User, busy: Boolean, hasError: Boolean, onLogout: () -> Unit,
                    preferences: PlannerPreferences, onTheme: (ThemeMode) -> Unit,
-                   onMood: (PlannerMood) -> Unit, onRollover: (Boolean) -> Unit) {
+                   onMood: (PlannerPersonality) -> Unit, onRollover: (Boolean) -> Unit, onAccent: (AccentColor) -> Unit = {}, extraSettings: @Composable () -> Unit = {}) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         Column(Modifier.widthIn(max = D.ContentWidth).fillMaxWidth().verticalScroll(rememberScrollState()).padding(D.Page),
             verticalArrangement = Arrangement.spacedBy(D.Large)) {
@@ -33,31 +34,7 @@ fun SettingsScreen(user: User, busy: Boolean, hasError: Boolean, onLogout: () ->
             Text(user.email, style = MaterialTheme.typography.bodyMedium)
             Text(stringResource(R.string.demo_account), style = MaterialTheme.typography.bodySmall)
             HorizontalDivider()
-            SectionTitle(stringResource(R.string.settings_appearance))
-            Text(stringResource(R.string.device_theme), style = MaterialTheme.typography.titleSmall)
-            ThemeMode.entries.forEach { mode ->
-                Row(Modifier.fillMaxWidth().heightIn(min = D.Touch).selectable(preferences.themeMode == mode,
-                    role = Role.RadioButton, onClick = { onTheme(mode) }), verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(preferences.themeMode == mode, null)
-                    Text(stringResource(mode.label()), Modifier.padding(start = D.Medium))
-                }
-            }
-            Text(stringResource(R.string.planner_style), style = MaterialTheme.typography.titleSmall)
-            PlannerMood.entries.forEach { mood ->
-                val preview = cadencyColors(mood, MaterialTheme.colorScheme.background.luminance() < 0.5f)
-                Row(Modifier.fillMaxWidth().heightIn(min = D.Touch).selectable(preferences.plannerMood == mood,
-                    role = Role.RadioButton, onClick = { onMood(mood) }).padding(vertical = D.Small),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(D.Medium)) {
-                    RadioButton(preferences.plannerMood == mood, null)
-                    Column(Modifier.weight(1f)) {
-                        Text(stringResource(mood.label()), style = MaterialTheme.typography.titleSmall)
-                        Text(stringResource(mood.description()), style = MaterialTheme.typography.bodySmall)
-                    }
-                    listOf(preview.primary, preview.surfaceContainer, preview.background).forEach { color ->
-                        Box(Modifier.size(D.Large).background(color, CircleShape))
-                    }
-                }
-            }
+            AppearanceSettings(preferences, onTheme, onMood, onAccent)
             HorizontalDivider()
             SectionTitle(stringResource(R.string.settings_planning))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -68,6 +45,7 @@ fun SettingsScreen(user: User, busy: Boolean, hasError: Boolean, onLogout: () ->
                 Switch(preferences.gentleRolloverEnabled, onRollover)
             }
             HorizontalDivider()
+            extraSettings()
             SectionTitle(stringResource(R.string.about))
             Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleMedium)
             Text(stringResource(R.string.app_version, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.bodyMedium)

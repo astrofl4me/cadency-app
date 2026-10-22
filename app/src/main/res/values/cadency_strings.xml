@@ -18,10 +18,10 @@
     <string name="style_soft">Soft</string>
     <string name="style_clean">Clean</string>
     <string name="style_focus">Focus</string>
-    <string name="style_cozy_hint">Quente e acolhedor</string>
-    <string name="style_soft_hint">Leve e delicado</string>
-    <string name="style_clean_hint">Claro e organizado</string>
-    <string name="style_focus_hint">Minimalista e concentrado</string>
+    <string name="style_cozy_hint">Planner confortável e acolhedor.</string>
+    <string name="style_soft_hint">Leve, suave e espaçoso.</string>
+    <string name="style_clean_hint">Organizado e minimalista.</string>
+    <string name="style_focus_hint">Feito para reduzir distrações.</string>
     <string name="settings_planning">Planejamento</string>
     <string name="gentle_rollover">Gentle Rollover</string>
     <string name="rollover_preference_hint">Revisar pendências com calma, uma vez por dia.</string>

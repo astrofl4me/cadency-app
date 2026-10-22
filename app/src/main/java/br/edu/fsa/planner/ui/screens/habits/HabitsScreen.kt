@@ -1,4 +1,7 @@
 package br.edu.fsa.planner.ui.screens.habits
+import br.edu.fsa.planner.ui.components.CadencyButton as Button
+import br.edu.fsa.planner.ui.components.CadencyOutlinedButton as OutlinedButton
+import br.edu.fsa.planner.ui.components.CadencyCheckbox as Checkbox
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
@@ -18,6 +21,8 @@ import br.edu.fsa.planner.R
 import br.edu.fsa.planner.domain.model.*
 import br.edu.fsa.planner.ui.components.*
 import br.edu.fsa.planner.ui.theme.PlannerDimens as D
+import br.edu.fsa.planner.ui.theme.LocalCadencyPersonality
+import androidx.compose.animation.core.tween
 import br.edu.fsa.planner.viewmodel.HabitsState
 import java.time.LocalDate
 
@@ -48,7 +53,8 @@ fun HabitsScreen(state: HabitsState, onAdd: () -> Unit, onEdit: (Habit) -> Unit,
         if (state.error) item { Text(stringResource(R.string.storage_error), color = MaterialTheme.colorScheme.error) }
         if (!state.loading && state.habits.isEmpty()) item { EmptyState(stringResource(R.string.habits_empty)) }
         items(state.habits, key = { it.id }) { habit ->
-            Column(Modifier.fillMaxWidth().animateContentSize(), verticalArrangement = Arrangement.spacedBy(D.Small)) {
+            CadencySurface(Modifier.fillMaxWidth()) {
+            Column(Modifier.fillMaxWidth().animateContentSize(tween(LocalCadencyPersonality.current.motionMillis)).padding(D.Medium), verticalArrangement = Arrangement.spacedBy(D.Small)) {
                 Row(Modifier.fillMaxWidth().clickable { onEdit(habit) }.heightIn(min = D.Touch), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(D.Medium)) {
                     Icon(habit.icon.vector(), null, tint = MaterialTheme.colorScheme.primary)
@@ -81,6 +87,7 @@ fun HabitsScreen(state: HabitsState, onAdd: () -> Unit, onEdit: (Habit) -> Unit,
                     }
                 }
                 HorizontalDivider()
+            }
             }
         }
     }
