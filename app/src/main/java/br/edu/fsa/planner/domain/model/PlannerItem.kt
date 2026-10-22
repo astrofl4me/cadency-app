@@ -21,6 +21,8 @@ data class PlannerItem(
     val isCompleted: Boolean = false,
     val createdAt: Long = 0,
     val updatedAt: Long = 0,
+    val originalDate: LocalDate? = null, val rolloverCount: Int = 0,
+    val isInbox: Boolean = false, val isDiscarded: Boolean = false, val completedOn: LocalDate? = null,
 )
 
 data class PlannerNote(

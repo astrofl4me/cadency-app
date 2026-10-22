@@ -13,7 +13,9 @@ data class PlannerForm(
         require(validatePlannerForm(this).isValid)
         return PlannerItem(original?.id ?: 0, title.trim(), description.trim(), LocalDate.parse(date),
             parseOptionalTime(startTime), parseOptionalTime(endTime), type, priority, category, isCompleted,
-            original?.createdAt ?: 0, original?.updatedAt ?: 0)
+            original?.createdAt ?: 0, original?.updatedAt ?: 0,
+            original?.originalDate, original?.rolloverCount ?: 0, original?.isInbox ?: false,
+            original?.isDiscarded ?: false, original?.completedOn)
     }
 }
 

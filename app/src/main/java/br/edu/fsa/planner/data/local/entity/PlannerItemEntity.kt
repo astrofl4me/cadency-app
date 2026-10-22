@@ -3,6 +3,7 @@ package br.edu.fsa.planner.data.local.entity
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.ColumnInfo
 import br.edu.fsa.planner.domain.model.*
 import java.time.LocalDate
 import java.time.LocalTime
@@ -21,10 +22,15 @@ data class PlannerItemEntity(
     val isCompleted: Boolean,
     val createdAt: Long,
     val updatedAt: Long,
+    val originalDate: LocalDate? = null,
+    @ColumnInfo(defaultValue = "0") val rolloverCount: Int = 0,
+    @ColumnInfo(defaultValue = "0") val isInbox: Boolean = false,
+    @ColumnInfo(defaultValue = "0") val isDiscarded: Boolean = false,
+    val completedOn: LocalDate? = null,
 )
 
 fun PlannerItemEntity.toModel() = PlannerItem(id, title, description, date, startTime, endTime, type,
-    priority, category, isCompleted, createdAt, updatedAt)
+    priority, category, isCompleted, createdAt, updatedAt, originalDate, rolloverCount, isInbox, isDiscarded, completedOn)
 
 fun PlannerItem.toEntity() = PlannerItemEntity(id, title, description, date, startTime, endTime, type,
-    priority, category, isCompleted, createdAt, updatedAt)
+    priority, category, isCompleted, createdAt, updatedAt, originalDate, rolloverCount, isInbox, isDiscarded, completedOn)

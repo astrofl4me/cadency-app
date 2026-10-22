@@ -9,11 +9,17 @@ import br.edu.fsa.planner.data.local.dao.PlannerDao
 import br.edu.fsa.planner.data.local.entity.PlannerItemEntity
 import br.edu.fsa.planner.data.local.entity.PlannerNoteEntity
 import br.edu.fsa.planner.data.local.entity.WeeklyHabitEntity
+import br.edu.fsa.planner.data.local.entity.*
+import br.edu.fsa.planner.data.local.dao.HabitDao
+import br.edu.fsa.planner.data.local.dao.FocusDao
 
-@Database(entities = [PlannerItemEntity::class, PlannerNoteEntity::class, WeeklyHabitEntity::class], version = 2, exportSchema = true)
+@Database(entities = [PlannerItemEntity::class, PlannerNoteEntity::class, WeeklyHabitEntity::class,
+    HabitEntity::class, HabitCheckInEntity::class, SubtaskEntity::class, FocusSessionEntity::class], version = 3, exportSchema = true)
 @TypeConverters(PlannerConverters::class)
 abstract class PlannerDatabase : RoomDatabase() {
     abstract fun plannerDao(): PlannerDao
+    abstract fun habitDao(): HabitDao
+    abstract fun focusDao(): FocusDao
 
     companion object {
         val Migration1To2 = object : Migration(1, 2) {
