@@ -58,6 +58,7 @@ object PlannerDimens {
     val PaperWeekdayWidth = 84.dp
     val PaperDot = 10.dp
     val PaperMood = 28.dp
+    val FocusTimer = 220.dp
 }
 
 object PlannerFonts {
@@ -79,6 +80,7 @@ object PlannerPaper {
         fontWeight = FontWeight.Medium, letterSpacing = 1.sp)
     val Body = TextStyle(fontFamily = PlannerFonts.Body, fontSize = 14.sp, lineHeight = 22.sp)
     val Caption = TextStyle(fontFamily = PlannerFonts.Body, fontSize = 12.sp, lineHeight = 18.sp)
+    val TimerText = TextStyle(fontFamily = PlannerFonts.Heading, fontSize = 48.sp, lineHeight = 56.sp)
 }
 
 private val Type = Typography(

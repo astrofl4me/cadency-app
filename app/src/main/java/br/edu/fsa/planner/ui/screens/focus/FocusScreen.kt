@@ -1,0 +1,75 @@
+package br.edu.fsa.planner.ui.screens.focus
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import br.edu.fsa.planner.R
+import br.edu.fsa.planner.domain.model.*
+import br.edu.fsa.planner.ui.components.CadencyTopBar
+import br.edu.fsa.planner.ui.theme.PlannerPaper
+import br.edu.fsa.planner.ui.theme.PlannerDimens as D
+import br.edu.fsa.planner.viewmodel.FocusState
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun FocusScreen(state: FocusState, onChoose: (Int) -> Unit, onCustom: () -> Unit, onCustomText: (String) -> Unit,
+                onStart: () -> Unit, onPause: () -> Unit, onResume: () -> Unit, onFinish: () -> Unit,
+                onRestart: () -> Unit, onCompleteTask: () -> Unit, onBack: () -> Unit) {
+    var confirm by rememberSaveable { mutableStateOf(false) }
+    Scaffold(topBar = { CadencyTopBar(stringResource(R.string.focus_flow), onBack) }) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).imePadding().padding(D.Page),
+            verticalArrangement = Arrangement.spacedBy(D.Page), horizontalAlignment = Alignment.CenterHorizontally) {
+            if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if (state.error) Text(stringResource(R.string.storage_error), color = MaterialTheme.colorScheme.error)
+            val session = state.session
+            Text((session?.title ?: state.title).ifBlank { stringResource(R.string.focus_free) }, style = MaterialTheme.typography.headlineMedium)
+            if (session == null) {
+                Text(stringResource(R.string.focus_hint), style = MaterialTheme.typography.bodyMedium)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(D.Small)) {
+                    FocusRules.presets.forEach { minutes -> FilterChip(!state.custom && state.minutes == minutes,
+                        { onChoose(minutes) }, label = { Text(stringResource(R.string.duration_minutes, minutes)) }) }
+                    FilterChip(state.custom, onCustom, label = { Text(stringResource(R.string.focus_custom)) })
+                }
+                if (state.custom) OutlinedTextField(state.customText, onCustomText, singleLine = true,
+                    label = { Text(stringResource(R.string.focus_duration)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    isError = state.invalid, supportingText = { if (state.invalid) Text(stringResource(R.string.focus_duration_error)) })
+                Button(onClick = onStart, enabled = !state.busy && !state.loading, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.start_focus)) }
+            } else {
+                val active = session.status == FocusStatus.RUNNING || session.status == FocusStatus.PAUSED
+                val remaining = FocusRules.remaining(session, state.now)
+                Box(Modifier.size(D.FocusTimer), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(progress = { 1f - remaining.toFloat() / (session.plannedSeconds * 1000L) },
+                        modifier = Modifier.fillMaxSize(), trackColor = MaterialTheme.colorScheme.surfaceContainerHighest)
+                    Text(FocusRules.timer(remaining), style = PlannerPaper.TimerText)
+                }
+                Text(stringResource(when (session.status) {
+                    FocusStatus.RUNNING -> R.string.focus_running; FocusStatus.PAUSED -> R.string.focus_paused
+                    FocusStatus.FINISHED -> R.string.focus_finished; FocusStatus.STOPPED -> R.string.focus_recorded
+                }), style = MaterialTheme.typography.titleMedium)
+                if (active) {
+                    Button(onClick = if (session.status == FocusStatus.RUNNING) onPause else onResume, enabled = !state.busy,
+                        modifier = Modifier.fillMaxWidth()) { Text(stringResource(if (session.status == FocusStatus.RUNNING) R.string.focus_pause else R.string.focus_resume)) }
+                    OutlinedButton(onClick = { confirm = true }, enabled = !state.busy) { Text(stringResource(R.string.focus_end)) }
+                } else {
+                    Text(if (session.elapsedMillis >= 60000) stringResource(R.string.focus_minutes_done, (session.elapsedMillis / 60000).toInt())
+                        else stringResource(R.string.focus_seconds_done, (session.elapsedMillis / 1000).toInt()))
+                    Button(onClick = onRestart, enabled = !state.busy) { Text(stringResource(R.string.focus_continue)) }
+                    TextButton(onClick = onBack) { Text(stringResource(R.string.focus_end)) }
+                }
+                if (session.plannerItemId != null) TextButton(onClick = onCompleteTask, enabled = !state.busy) { Text(stringResource(R.string.focus_complete_task)) }
+            }
+        }
+    }
+    if (confirm) AlertDialog(onDismissRequest = { confirm = false }, title = { Text(stringResource(R.string.focus_end_question)) },
+        text = { Text(stringResource(R.string.focus_end_hint)) },
+        confirmButton = { TextButton(onClick = { confirm = false; onFinish() }) { Text(stringResource(R.string.focus_end)) } },
+        dismissButton = { TextButton(onClick = { confirm = false }) { Text(stringResource(R.string.focus_continue)) } })
+}

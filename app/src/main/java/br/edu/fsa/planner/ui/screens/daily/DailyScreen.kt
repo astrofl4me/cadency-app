@@ -25,7 +25,7 @@ fun DailyScreen(state: DailyUiState, onPrevious: () -> Unit, onNext: () -> Unit,
                 onAdd: (LocalDate, ItemType) -> Unit, onEdit: (PlannerItem) -> Unit, onToggle: (PlannerItem) -> Unit,
                 onMood: (Mood) -> Unit, onNote: (String, DailyNoteField) -> Unit, onWater: (Int) -> Unit, onRetry: () -> Unit,
                 onReview: (() -> Unit)? = null, onInbox: (() -> Unit)? = null, pendingCount: Int = 0, inboxCount: Int = 0,
-                onNow: (() -> Unit)? = null) {
+                onNow: (() -> Unit)? = null, onFocus: (() -> Unit)? = null) {
     var editing by rememberSaveable(state.date.toString()) { mutableStateOf<DailyNoteField?>(null) }
     val priorities = state.items.filter { it.type == ItemType.PRIORITY || it.priority == Priority.HIGH }
     val agenda = state.items.filterNot { it in priorities }
@@ -45,6 +45,7 @@ fun DailyScreen(state: DailyUiState, onPrevious: () -> Unit, onNext: () -> Unit,
                 if (onNow != null) androidx.compose.material3.OutlinedButton(onClick = onNow, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.enter_now))
                 }
+                if (onFocus != null) TextButton(onClick = onFocus) { Text(stringResource(R.string.focus_flow)) }
             }
             if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
             else if (state.hasError) item { DataError(onRetry) }

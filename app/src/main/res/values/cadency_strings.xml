@@ -88,4 +88,24 @@
     <string name="now_reset">Rever planos que pulei</string>
     <string name="now_skip">Pular por agora</string>
     <string name="now_next">Próximo</string>
+    <string name="focus_flow">Focus Flow</string>
+    <string name="focus_free">Foco livre</string>
+    <string name="focus_hint">Um tempo intencional para uma coisa de cada vez.</string>
+    <string name="duration_minutes">%1$d min</string>
+    <string name="focus_custom">Personalizado</string>
+    <string name="focus_duration">Duração em minutos</string>
+    <string name="focus_duration_error">Escolha de 1 a 180 minutos.</string>
+    <string name="focus_running">Um passo de cada vez.</string>
+    <string name="focus_paused">Uma pausa também faz parte.</string>
+    <string name="focus_finished">Tempo concluído ✨</string>
+    <string name="focus_recorded">Seu tempo de foco foi registrado.</string>
+    <string name="focus_pause">Pausar</string>
+    <string name="focus_resume">Retomar</string>
+    <string name="focus_end">Encerrar</string>
+    <string name="focus_continue">Continuar</string>
+    <string name="focus_complete_task">Concluir tarefa</string>
+    <string name="focus_end_question">Encerrar esta sessão?</string>
+    <string name="focus_end_hint">O tempo que você dedicou até aqui ficará salvo.</string>
+    <string name="focus_minutes_done">%1$d minutos de foco</string>
+    <string name="focus_seconds_done">%1$d segundos de foco</string>
 </resources>

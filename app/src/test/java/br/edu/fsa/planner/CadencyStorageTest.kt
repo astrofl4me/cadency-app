@@ -17,6 +17,7 @@ import org.robolectric.annotation.Config
 import org.json.JSONObject
 import java.time.LocalDate
 import java.util.UUID
+import java.time.*
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -27,6 +28,32 @@ class CadencyStorageTest {
     private fun open() = Room.databaseBuilder(context, PlannerDatabase::class.java, name)
         .addMigrations(PlannerDatabase.Migration1To2, Migration2To3).build()
     @After fun close() { db.close(); context.deleteDatabase(name) }
+    @Test fun focusCountsElapsedTimeExcludingPauseAndRecoversDeadline() = runBlocking {
+        class TestClock(var value: Long) : Clock() {
+            override fun getZone(): ZoneId = ZoneOffset.UTC
+            override fun withZone(zone: ZoneId): Clock = this
+            override fun instant(): Instant = Instant.ofEpochMilli(value)
+        }
+        val clock = TestClock(Instant.parse("2026-10-21T12:00:00Z").toEpochMilli())
+        val focus = FocusRepository(db.focusDao(), clock)
+        val id = focus.start(null, "Foco livre", 2)
+        clock.value += 60000
+        focus.pause(id)
+        clock.value += 120000
+        focus.resume(id)
+        clock.value += 30000
+        focus.finish(id)
+        assertEquals(90000, focus.get(id)!!.elapsedMillis)
+        assertEquals(FocusStatus.STOPPED, focus.get(id)!!.status)
+        val deadline = focus.start(null, "Outra sessão", 1)
+        db.close(); db = open()
+        clock.value += 61000
+        val recovered = FocusRepository(db.focusDao(), clock)
+        recovered.finishExpired()
+        assertEquals(FocusStatus.FINISHED, recovered.get(deadline)!!.status)
+        assertEquals(60000, recovered.get(deadline)!!.elapsedMillis)
+        assertNull(recovered.active.first())
+    }
     @Test fun rolloverKeepsIdentityOriginAndSeparatesInboxFromAgenda() = runBlocking {
         val planner = PlannerRepository(db.plannerDao())
         val today = LocalDate.of(2026, 10, 21)

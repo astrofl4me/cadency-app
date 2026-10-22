@@ -8,6 +8,13 @@ import java.time.LocalDate
 
 class CadencyRulesTest {
     private val monday = LocalDate.of(2026, 10, 19)
+    @Test fun focusTimerHandlesPauseAndDeadlineWithoutNegativeTime() {
+        val session = FocusSession(day = monday, startedAt = 1000, plannedSeconds = 60, resumedAt = 1000)
+        assertEquals(30000, FocusRules.remaining(session, 31000))
+        assertEquals("00:30", FocusRules.timer(30000))
+        assertEquals(0, FocusRules.remaining(session, 999999))
+        assertEquals(30000, FocusRules.remaining(session.copy(status = FocusStatus.PAUSED, elapsedMillis = 30000), 999999))
+    }
     @Test fun nowModePrefersOngoingThenSoonThenPriorityAndSkipsCompleted() {
         val now = monday.atTime(14, 0)
         val ongoing = PlannerItem(id = 1, title = "Em andamento", date = monday, startTime = java.time.LocalTime.of(13, 30), endTime = java.time.LocalTime.of(14, 30))

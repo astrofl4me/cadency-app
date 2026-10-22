@@ -47,6 +47,8 @@ import br.edu.fsa.planner.ui.screens.daily.InboxScreen
 import br.edu.fsa.planner.viewmodel.RolloverViewModel
 import br.edu.fsa.planner.viewmodel.NowModeViewModel
 import br.edu.fsa.planner.ui.screens.now.NowModeScreen
+import br.edu.fsa.planner.ui.screens.focus.FocusScreen
+import br.edu.fsa.planner.viewmodel.FocusViewModel
 import br.edu.fsa.planner.ui.screens.weekly.WeeklyScreen
 import br.edu.fsa.planner.ui.screens.monthly.MonthlyScreen
 import br.edu.fsa.planner.ui.screens.settings.SettingsScreen
@@ -97,7 +99,14 @@ fun PlannerNavigation(container: AppContainer) {
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(lifecycleOwner, planner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            while (isActive) { planner.refreshToday(); habits.refreshToday(); delay(60_000) }
+            while (isActive) {
+                planner.refreshToday(); habits.refreshToday()
+                if (navController.currentDestination?.route == "daily") rollover.maybeOffer()
+                try { container.focusRepository.finishExpired() }
+                catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                catch (_: Exception) { snackbar.showSnackbar(resources.getString(R.string.storage_error)) }
+                delay(60_000)
+            }
         }
     }
     fun addItem(date: LocalDate, type: ItemType) { navController.navigate("taskEditor?date=$date&type=${type.name}") }
@@ -175,7 +184,17 @@ fun PlannerNavigation(container: AppContainer) {
             composable("nowMode") {
                 val now: NowModeViewModel = viewModel(factory = viewModelFactory { initializer { NowModeViewModel(container.plannerRepository, createSavedStateHandle()) } })
                 val state by now.state.collectAsStateWithLifecycle()
-                NowModeScreen(state, now::complete, now::skip, { navController.popBackStack() }, now::clearSkipped, { navController.popBackStack() })
+                NowModeScreen(state, now::complete, now::skip, { navController.popBackStack() }, now::clearSkipped,
+                    { navController.popBackStack() }, { navController.navigate("focusFlow?itemId=${it.id}") })
+            }
+            composable("focusFlow?itemId={itemId}", arguments = listOf(navArgument("itemId") { type = NavType.LongType; defaultValue = 0L })) {
+                val focus: FocusViewModel = viewModel(factory = viewModelFactory {
+                    initializer { FocusViewModel(container.focusRepository, container.plannerRepository, createSavedStateHandle()) }
+                })
+                val state by focus.state.collectAsStateWithLifecycle()
+                LaunchedEffect(state.taskCompleted) { if (state.taskCompleted) navController.popBackStack() }
+                FocusScreen(state, focus::choose, focus::custom, focus::customText, focus::start, focus::pause,
+                    focus::resume, focus::finish, focus::restart, focus::completeTask) { navController.popBackStack() }
             }
             composable("taskDetails/{itemId}", arguments = listOf(navArgument("itemId") { type = NavType.LongType })) {
                 val details: TaskDetailsViewModel = viewModel(factory = viewModelFactory { initializer { TaskDetailsViewModel(container.plannerRepository, createSavedStateHandle()) } })
@@ -186,7 +205,8 @@ fun PlannerNavigation(container: AppContainer) {
                 }
                 TaskDetailsScreen(state, draft, details::updateDraft, details::addStep, details::toggleStep,
                     details::removeStep, details::move, details::toggleParent, details::dismissCompletion,
-                    { navController.navigate("taskEditor?itemId=${state.item?.id ?: 0}") }, { navController.popBackStack() })
+                    { navController.navigate("taskEditor?itemId=${state.item?.id ?: 0}") }, { navController.popBackStack() },
+                    { navController.navigate("focusFlow?itemId=${state.item?.id ?: 0}") })
             }
             composable("habitEditor?habitId={habitId}", arguments = listOf(navArgument("habitId") { type = NavType.LongType; defaultValue = 0L })) {
                 val editor: HabitEditorViewModel = viewModel(factory = viewModelFactory { initializer { HabitEditorViewModel(container.habitRepository, createSavedStateHandle()) } })
@@ -220,7 +240,7 @@ fun PlannerNavigation(container: AppContainer) {
                             ::addItem, { navController.navigate("taskDetails/${it.id}") }, planner::toggle,
                             planner::setMood, planner::saveDailyReflection, planner::setWaterGlasses, planner::retryData,
                             rollover::open, { navController.navigate("inbox") }, rolloverState.items.size, rolloverState.inbox.size,
-                            { navController.navigate("nowMode") })
+                            { navController.navigate("nowMode") }, { navController.navigate("focusFlow") })
                         if (rolloverState.showing) RolloverDialog(rolloverState, rollover::schedule,
                             rollover::inbox, rollover::discard, rollover::allToday, rollover::dismiss)
                     } else if (tab.route == "weekly") {
