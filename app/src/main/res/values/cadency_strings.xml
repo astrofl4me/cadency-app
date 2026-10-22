@@ -62,4 +62,18 @@
     <string name="subtasks_finished">Um passo de cada vez</string>
     <string name="subtasks_complete_parent">Todas as etapas foram concluídas. Concluir a tarefa também?</string>
     <string name="not_now">Agora não</string>
+    <string name="rollover_title">Algumas coisas ficaram de ontem.</string>
+    <string name="rollover_hint">Ontem ficou corrido? Tudo bem. Vamos decidir o que ainda faz sentido.</string>
+    <string name="rollover_done">Você reorganizou suas pendências. Continue no seu ritmo.</string>
+    <string name="rollover_choose_date">Escolher outra data</string>
+    <string name="rollover_inbox">Deixar na Inbox</string>
+    <string name="rollover_discard">Não preciso mais</string>
+    <string name="rollover_all">Manter todas para hoje</string>
+    <string name="rollover_later">Revisar depois</string>
+    <string name="rollover_review_count">Vamos reorganizar? %1$d pendências</string>
+    <string name="inbox_title">Caixa de entrada</string>
+    <string name="inbox_count">Caixa de entrada · %1$d</string>
+    <string name="inbox_hint">Ideias e tarefas esperando por um momento que faça sentido.</string>
+    <string name="inbox_empty">Sua caixa de entrada está tranquila.</string>
+    <string name="inbox_today">Trazer para hoje</string>
 </resources>

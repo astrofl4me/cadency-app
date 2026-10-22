@@ -6,18 +6,19 @@ import br.edu.fsa.planner.data.local.entity.PlannerNoteEntity
 import br.edu.fsa.planner.data.local.entity.WeeklyHabitEntity
 import br.edu.fsa.planner.data.local.entity.SubtaskEntity
 import br.edu.fsa.planner.domain.model.SubtaskProgress
+import br.edu.fsa.planner.domain.model.DailyCount
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 @Dao
 interface PlannerDao : HabitDao {
-    @Query("SELECT * FROM planner_items WHERE date = :date ORDER BY isCompleted, CASE WHEN startTime IS NULL THEN 1 ELSE 0 END, startTime, CASE priority WHEN 'HIGH' THEN 0 WHEN 'MEDIUM' THEN 1 ELSE 2 END, id")
+    @Query("SELECT * FROM planner_items WHERE date = :date AND isInbox = 0 AND isDiscarded = 0 ORDER BY isCompleted, CASE WHEN startTime IS NULL THEN 1 ELSE 0 END, startTime, CASE priority WHEN 'HIGH' THEN 0 WHEN 'MEDIUM' THEN 1 ELSE 2 END, id")
     fun observeDay(date: LocalDate): Flow<List<PlannerItemEntity>>
 
-    @Query("SELECT * FROM planner_items WHERE date BETWEEN :start AND :end ORDER BY date, isCompleted, CASE WHEN startTime IS NULL THEN 1 ELSE 0 END, startTime, id")
+    @Query("SELECT * FROM planner_items WHERE date BETWEEN :start AND :end AND isInbox = 0 AND isDiscarded = 0 ORDER BY date, isCompleted, CASE WHEN startTime IS NULL THEN 1 ELSE 0 END, startTime, id")
     fun observeRange(start: LocalDate, end: LocalDate): Flow<List<PlannerItemEntity>>
 
-    @Query("SELECT * FROM planner_items WHERE date BETWEEN :start AND :end AND isCompleted = :completed ORDER BY date, id")
+    @Query("SELECT * FROM planner_items WHERE date BETWEEN :start AND :end AND isCompleted = :completed AND isInbox = 0 AND isDiscarded = 0 ORDER BY date, id")
     fun observeCompletion(start: LocalDate, end: LocalDate, completed: Boolean): Flow<List<PlannerItemEntity>>
 
     @Query("SELECT * FROM planner_items WHERE id = :id")
@@ -46,6 +47,18 @@ interface PlannerDao : HabitDao {
     @Query("DELETE FROM planner_items WHERE id = :id") suspend fun delete(id: Long): Int
     @Query("UPDATE planner_items SET isCompleted = :completed, updatedAt = :timestamp WHERE id = :id")
     suspend fun setCompleted(id: Long, completed: Boolean, timestamp: Long): Int
+    @Query("UPDATE planner_items SET isCompleted = :completed, completedOn = :date, updatedAt = :timestamp WHERE id = :id")
+    suspend fun setCompletedWithDate(id: Long, completed: Boolean, timestamp: Long, date: LocalDate?): Int
+    @Query("SELECT * FROM planner_items WHERE date < :today AND isCompleted = 0 AND isInbox = 0 AND isDiscarded = 0 AND type != 'EVENT' ORDER BY date, id")
+    fun observePending(today: LocalDate): Flow<List<PlannerItemEntity>>
+    @Query("SELECT * FROM planner_items WHERE isInbox = 1 AND isDiscarded = 0 AND isCompleted = 0 ORDER BY createdAt, id")
+    fun observeInbox(): Flow<List<PlannerItemEntity>>
+    @Query("UPDATE planner_items SET originalDate = COALESCE(originalDate,date), date = :date, rolloverCount = rolloverCount + 1, isInbox = 0, updatedAt = :timestamp WHERE id = :id AND isCompleted = 0 AND isDiscarded = 0")
+    suspend fun reschedule(id: Long, date: LocalDate, timestamp: Long)
+    @Query("UPDATE planner_items SET originalDate = COALESCE(originalDate,date), rolloverCount = rolloverCount + 1, isInbox = 1, updatedAt = :timestamp WHERE id = :id AND isCompleted = 0")
+    suspend fun moveToInbox(id: Long, timestamp: Long)
+    @Query("UPDATE planner_items SET isDiscarded = 1, updatedAt = :timestamp WHERE id = :id AND isCompleted = 0")
+    suspend fun discard(id: Long, timestamp: Long)
 
     @Query("SELECT * FROM planner_notes WHERE `key` = :key")
     fun observeNote(key: String): Flow<PlannerNoteEntity?>

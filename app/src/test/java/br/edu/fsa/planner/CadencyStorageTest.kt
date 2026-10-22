@@ -27,6 +27,28 @@ class CadencyStorageTest {
     private fun open() = Room.databaseBuilder(context, PlannerDatabase::class.java, name)
         .addMigrations(PlannerDatabase.Migration1To2, Migration2To3).build()
     @After fun close() { db.close(); context.deleteDatabase(name) }
+    @Test fun rolloverKeepsIdentityOriginAndSeparatesInboxFromAgenda() = runBlocking {
+        val planner = PlannerRepository(db.plannerDao())
+        val today = LocalDate.of(2026, 10, 21)
+        val original = today.minusDays(2)
+        val id = planner.save(PlannerItem(title = "Reorganizar", date = original))
+        planner.save(PlannerItem(title = "Feito", date = original, isCompleted = true))
+        planner.save(PlannerItem(title = "Evento", date = original, type = ItemType.EVENT))
+        assertEquals(listOf(id), planner.observePending(today).first().map { it.id })
+        planner.reschedule(id, original.plusDays(1))
+        planner.reschedule(id, today)
+        assertEquals(original, planner.get(id)!!.originalDate)
+        assertEquals(2, planner.get(id)!!.rolloverCount)
+        planner.toInbox(id)
+        assertTrue(planner.observeDay(today).first().isEmpty())
+        assertEquals(id, planner.observeInbox().first().single().id)
+        planner.reschedule(id, today)
+        assertEquals(id, planner.observeDay(today).first().single().id)
+        assertTrue(planner.observeInbox().first().isEmpty())
+        planner.discard(id)
+        assertTrue(planner.observeDay(today).first().isEmpty())
+        assertTrue(planner.get(id)!!.isDiscarded)
+    }
 
     @Test fun deletingTaskCascadesStepsButRetainsFocusHistory() = runBlocking {
         val planner = PlannerRepository(db.plannerDao())

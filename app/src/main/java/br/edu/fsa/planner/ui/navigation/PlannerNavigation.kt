@@ -42,6 +42,9 @@ import br.edu.fsa.planner.viewmodel.EditorResult
 import br.edu.fsa.planner.viewmodel.PlannerViewModel
 import br.edu.fsa.planner.viewmodel.PlannerNotice
 import br.edu.fsa.planner.ui.screens.daily.DailyScreen
+import br.edu.fsa.planner.ui.screens.daily.RolloverDialog
+import br.edu.fsa.planner.ui.screens.daily.InboxScreen
+import br.edu.fsa.planner.viewmodel.RolloverViewModel
 import br.edu.fsa.planner.ui.screens.weekly.WeeklyScreen
 import br.edu.fsa.planner.ui.screens.monthly.MonthlyScreen
 import br.edu.fsa.planner.ui.screens.settings.SettingsScreen
@@ -79,6 +82,10 @@ fun PlannerNavigation(container: AppContainer) {
     val planner: PlannerViewModel = viewModel(factory = viewModelFactory {
         initializer { PlannerViewModel(container.plannerRepository, createSavedStateHandle()) }
     })
+    val rollover: RolloverViewModel = viewModel(factory = viewModelFactory {
+        initializer { RolloverViewModel(container.plannerRepository, container.preferencesRepository, createSavedStateHandle()) }
+    })
+    val rolloverState by rollover.state.collectAsStateWithLifecycle()
     val session by auth.session.collectAsStateWithLifecycle()
     val login by auth.login.collectAsStateWithLifecycle()
     val navController = rememberNavController()
@@ -92,6 +99,9 @@ fun PlannerNavigation(container: AppContainer) {
         }
     }
     fun addItem(date: LocalDate, type: ItemType) { navController.navigate("taskEditor?date=$date&type=${type.name}") }
+    LaunchedEffect(entry?.destination?.route, session.user, preferences.ready) {
+        if (entry?.destination?.route == "daily" && session.user != null && preferences.ready) rollover.maybeOffer()
+    }
     LaunchedEffect(planner, resources) {
         planner.notices.collect { notice ->
             val message = when (notice) {
@@ -157,6 +167,9 @@ fun PlannerNavigation(container: AppContainer) {
                 session.user?.let { SettingsScreen(it, login.busy, login.error != null || settingsError,
                     auth::signOut, preferences, settings::setTheme, settings::setMood, settings::setRollover) }
             }
+            composable("inbox") {
+                InboxScreen(rolloverState.inbox, { navController.navigate("taskDetails/${it.id}") }, rollover::schedule) { navController.popBackStack() }
+            }
             composable("taskDetails/{itemId}", arguments = listOf(navArgument("itemId") { type = NavType.LongType })) {
                 val details: TaskDetailsViewModel = viewModel(factory = viewModelFactory { initializer { TaskDetailsViewModel(container.plannerRepository, createSavedStateHandle()) } })
                 val state by details.state.collectAsStateWithLifecycle()
@@ -198,7 +211,10 @@ fun PlannerNavigation(container: AppContainer) {
                         val state by planner.daily.collectAsStateWithLifecycle()
                         DailyScreen(state, { planner.moveDay(-1) }, { planner.moveDay(1) }, planner::goToday,
                             ::addItem, { navController.navigate("taskDetails/${it.id}") }, planner::toggle,
-                            planner::setMood, planner::saveDailyReflection, planner::setWaterGlasses, planner::retryData)
+                            planner::setMood, planner::saveDailyReflection, planner::setWaterGlasses, planner::retryData,
+                            rollover::open, { navController.navigate("inbox") }, rolloverState.items.size, rolloverState.inbox.size)
+                        if (rolloverState.showing) RolloverDialog(rolloverState, rollover::schedule,
+                            rollover::inbox, rollover::discard, rollover::allToday, rollover::dismiss)
                     } else if (tab.route == "weekly") {
                         val state by planner.weekly.collectAsStateWithLifecycle()
                         WeeklyScreen(state, { planner.moveWeek(-1) }, { planner.moveWeek(1) }, planner::goCurrentWeek,

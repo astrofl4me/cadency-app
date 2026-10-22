@@ -8,6 +8,16 @@ import java.time.LocalDate
 
 class CadencyRulesTest {
     private val monday = LocalDate.of(2026, 10, 19)
+    @Test fun rolloverExcludesCompletedEventsInboxAndCurrentDates() {
+        val pending = PlannerItem(title = "Ontem", date = monday.minusDays(1))
+        assertTrue(RolloverRules.eligible(pending, monday))
+        listOf(pending.copy(isCompleted = true), pending.copy(type = ItemType.EVENT), pending.copy(isInbox = true),
+            pending.copy(isDiscarded = true), pending.copy(date = monday)).forEach { assertFalse(RolloverRules.eligible(it, monday)) }
+        val prefs = PlannerPreferences(ready = true)
+        assertTrue(RolloverRules.shouldOffer(prefs, monday, listOf(pending)))
+        assertFalse(RolloverRules.shouldOffer(prefs.copy(lastRolloverReviewDate = monday), monday, listOf(pending)))
+        assertFalse(RolloverRules.shouldOffer(prefs.copy(gentleRolloverEnabled = false), monday, listOf(pending)))
+    }
     @Test fun subtaskProgressHandlesEmptyPartialAndCompleteLists() {
         assertEquals(0f, SubtaskProgress(1, 0, 0).fraction)
         assertFalse(SubtaskProgress(1, 0, 0).allComplete)

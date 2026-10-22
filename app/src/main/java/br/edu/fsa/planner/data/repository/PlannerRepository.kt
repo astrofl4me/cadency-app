@@ -38,16 +38,27 @@ class PlannerRepository(private val dao: PlannerDao, private val clock: Clock = 
 
     suspend fun save(item: PlannerItem): Long {
         val now = clock.millis()
-        return if (item.id == 0L) dao.insert(item.copy(createdAt = now, updatedAt = now).toEntity())
+        val previous = if (item.id == 0L) null else get(item.id)
+        val rescheduled = previous != null && previous.date != item.date
+        val value = item.copy(originalDate = item.originalDate ?: previous?.originalDate ?: previous?.date ?: item.date,
+            rolloverCount = if (rescheduled) previous!!.rolloverCount + 1 else item.rolloverCount,
+            isInbox = if (rescheduled) false else item.isInbox,
+            completedOn = if (item.isCompleted) item.completedOn ?: LocalDate.now(clock) else null)
+        return if (item.id == 0L) dao.insert(value.copy(createdAt = now, updatedAt = now).toEntity())
         else {
-            check(dao.update(item.copy(updatedAt = now).toEntity()) == 1) { "Item no longer exists" }
+            check(dao.update(value.copy(updatedAt = now).toEntity()) == 1) { "Item no longer exists" }
             item.id
         }
     }
     suspend fun delete(id: Long) { check(dao.delete(id) == 1) { "Item no longer exists" } }
     suspend fun setCompleted(item: PlannerItem, completed: Boolean) {
-        check(dao.setCompleted(item.id, completed, clock.millis()) == 1) { "Item no longer exists" }
+        check(dao.setCompletedWithDate(item.id, completed, clock.millis(), if (completed) LocalDate.now(clock) else null) == 1) { "Item no longer exists" }
     }
+    fun observePending(today: LocalDate) = dao.observePending(today).map { rows -> rows.map { it.toModel() } }
+    fun observeInbox() = dao.observeInbox().map { rows -> rows.map { it.toModel() } }
+    suspend fun reschedule(id: Long, date: LocalDate) = dao.reschedule(id, date, clock.millis())
+    suspend fun toInbox(id: Long) = dao.moveToInbox(id, clock.millis())
+    suspend fun discard(id: Long) = dao.discard(id, clock.millis())
     fun observeNote(key: String) = dao.observeNote(key).map { it?.toModel() ?: PlannerNote(key) }
     suspend fun saveNote(note: PlannerNote) { dao.saveNote(note.toEntity()) }
     suspend fun updateNote(key: String, transform: (PlannerNote) -> PlannerNote) {
