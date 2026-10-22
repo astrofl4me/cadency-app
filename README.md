@@ -1,37 +1,45 @@
-# PlannerApp — Meu Planner
+# Cadency — PlannerApp
 
-Planner pessoal Android para um projeto acadêmico de Engenharia da Computação. A primeira versão organiza tarefas e compromissos em páginas diárias, semanas e calendário mensal, com uma interface em português inspirada em um planner de papel.
+Planner pessoal Android para um projeto acadêmico de Engenharia da Computação. Organize seus dias respeitando o seu ritmo: agenda diária, semanal e mensal, hábitos, subtarefas, foco e informações locais sobre sua rotina, em uma interface em português inspirada em um planner de papel.
 
 **Package:** `br.edu.fsa.planner` · **Android mínimo:** 8.0 / API 26 · **Versão:** 1.0.0.
 
-Repositório: [astrofl4me/cadency-app](https://github.com/astrofl4me/cadency-app). O nome interno do projeto continua `PlannerApp` e o aplicativo aparece como **Meu Planner** nesta versão.
+Repositório: [astrofl4me/cadency-app](https://github.com/astrofl4me/cadency-app). O nome interno do projeto continua `PlannerApp`; o aplicativo aparece como **Cadency**. O package permanece igual para atualizar instalações existentes.
 
 ## Teste rápido no celular
 
 1. Neste computador, o APK já gerado fica em `app/build/outputs/apk/debug/app-debug.apk`. Transfira esse arquivo para um celular Android 8.0 ou superior.
 2. Abra o APK pelo gerenciador de arquivos. Se o Android solicitar, permita a instalação de aplicativos por essa fonte e conclua a instalação.
-3. Abra **Meu Planner** e toque em **Experimentar com conta demo**, ou entre com `demo@planner.app` e senha `123456`.
+3. Abra **Cadency** e toque em **Experimentar com conta demo**, ou entre com `demo@planner.app` e senha `123456`.
 4. Crie um plano, edite, conclua e confira no dia, semana e mês. Feche o aplicativo e abra novamente para conferir a persistência. Depois teste exclusão e logout.
 
 Os passos com Android Studio, emulador e depuração USB estão nas seções abaixo. O APK também pode ser obtido nos artifacts de uma execução bem-sucedida do GitHub Actions.
 
 ## Status atual
 
-As funcionalidades do MVP estão implementadas e o APK debug foi compilado. Em 21/10/2026, as páginas diária e semanal receberam o layout baseado nos modelos de planner enviados para o projeto. Os testes locais verificam regras, persistência, migração do banco e interface em celular e tablet. O fluxo instrumentado também passou no emulador Android 15, incluindo tarefas, água, gratidão, hábitos, restauração e logout. A abertura de anotações e o logout foram conferidos adicionalmente por toques via ADB/UI Automator. A aceitação em celular físico continua sendo uma etapa recomendada.
+O MVP existente foi ampliado em dez fases, preservando as páginas baseadas nas referências visuais. Hábitos recorrentes, revisão de pendências, subtarefas, Modo Agora, Focus Flow, Meu Ritmo e aparência persistente são recursos funcionais com dados locais reais. Os builds e os testes de cada etapa estão registrados em [verification/CADENCY_EVOLUCAO.md](verification/CADENCY_EVOLUCAO.md), junto às decisões, migrations e limitações. A aceitação em celular físico continua recomendada.
 
-Os resultados detalhados ficam em [verification/VALIDACAO.md](verification/VALIDACAO.md). Os relatórios gerados pelo Gradle ficam em `app/build/reports/`.
+O registro original fica em [verification/VALIDACAO.md](verification/VALIDACAO.md). A validação atual está em [verification/CADENCY_EVOLUCAO.md](verification/CADENCY_EVOLUCAO.md); os relatórios gerados pelo Gradle ficam em `app/build/reports/`.
 
 ## Funcionalidades
 
 - Login local, validação, mostrar/ocultar senha, acesso demo, sessão persistente e logout.
-- Navegação Compose com Hoje, Semana, Mês e Perfil em uma única Activity.
+- Navegação Compose com Hoje, Semana, Mês, Hábitos e Progresso em uma única Activity. Configurações pela engrenagem superior.
 - Criar, editar, concluir, reabrir e excluir tarefas ou compromissos.
 - Data, título, descrição, horários opcionais, tipo, prioridade e categoria.
 - Visão diária com prioridades, checklist, humor, controle de água, autocuidado, gratidão, anotações e planos de amanhã.
 - Visão semanal de segunda a domingo, prioridades, lista de tarefas, hábitos com marcações por dia, intenção e notas da semana.
 - Calendário mensal de domingo a sábado, seleção de datas, indicadores de categorias e abertura da visão diária.
 - Navegação entre dias, semanas e meses, com retorno ao período atual.
-- Persistência Room reativa; notas, humor, água, gratidão e hábitos também são dados locais reais. Migração de v1 para v2 preserva os registros anteriores.
+- Habit Tracker diário ou semanal, dias selecionados, meta semanal, histórico, edição, arquivamento e exclusão.
+- Gentle Rollover: revisão das pendências, escolhas de data/hoje/Inbox/descarte e controle diário sem mover tarefas automaticamente.
+- Etapas manuais com conclusão, exclusão e reordenação; confirmação antes de concluir a tarefa principal.
+- Modo Agora com seleção local de tarefa relevante e opção de pular temporariamente.
+- Focus Flow de 15/25/45/60 minutos ou duração personalizada; pausa, retomada e histórico do tempo real.
+- Meu Ritmo: períodos de 7/30 dias, tarefas concluídas, hábitos realizados, minutos de foco, dias planejados e gráficos acessíveis.
+- Ritmo da semana: carga das tarefas pendentes ponderada por prioridade.
+- Aparência Sistema/Claro/Escuro e estilos Cozy/Soft/Clean/Focus, combináveis e persistentes.
+- Persistência Room reativa; cadeia de migrations 1→2→3 mantém dados existentes, inclusive as marcações dos hábitos legados.
 - Estados de carregamento, listas vazias, erros e feedback discreto por snackbar.
 - Páginas diária e semanal com papel claro, blocos cinza, linhas finas e títulos serifados; áreas de toque e descrições acessíveis.
 
@@ -41,7 +49,7 @@ Em áreas úteis a partir de 600 dp, as páginas usam duas colunas, como os mode
 
 As fontes são provisórias. `PlannerFonts` e `PlannerPaper`, em `ui/theme/PlannerTheme.kt`, centralizam famílias, estilos, cores e formas. As fontes definitivas poderão ser adicionadas em `app/src/main/res/font/` e associadas ali, sem refazer as telas.
 
-O controle de água registra de zero a oito copos por data. Hábitos são criados, editados, marcados e excluídos por semana; não se repetem automaticamente. Atividades/anotações, autocuidado e gratidão são campos independentes. As capturas e o registro desta etapa ficam em [verification/REFERENCIA_VISUAL.md](verification/REFERENCIA_VISUAL.md).
+O controle de água registra de zero a oito copos por data. Os hábitos criados pelo acompanhamento semanal continuam limitados à semana escolhida; os criados na aba Hábitos podem se repetir entre semanas. As duas interfaces compartilham o mesmo histórico. Atividades/anotações, autocuidado e gratidão são campos independentes. O registro da referência original fica em [verification/REFERENCIA_VISUAL.md](verification/REFERENCIA_VISUAL.md).
 
 ## Stack
 
@@ -79,7 +87,7 @@ app/
         local/database/            # Room e converters
         local/dao/                 # consultas e operações SQL
         local/entity/              # entidades e mapeamentos
-        repository/                # planner e autenticação
+        repository/                # planner, auth, hábitos, foco, progresso e preferências
       domain/model/                # modelos, enums, datas e validação
       ui/
         navigation/
@@ -89,6 +97,11 @@ app/
         screens/monthly/
         screens/editor/
         screens/settings/
+        screens/habits/
+        screens/details/
+        screens/now/
+        screens/focus/
+        screens/progress/
         components/
         theme/                     # cores, tipografia, dimensões e shapes
       viewmodel/
@@ -247,29 +260,47 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1 -Tasks ass
 
 Os testes cobrem calendário, intervalos semanais, filtros, validação, queries reais do Room, CRUD reativo, banco reaberto, notas/humor e sessão/logout. O teste de interface local fica em `testDebug`, pois utiliza a Activity disponibilizada por `ui-test-manifest` nessa variante. O teste instrumentado percorre o fluxo essencial e recria a Activity para verificar restauração.
 
-Na validação de 21/10/2026, passaram **26 testes em debug e 24 em release**. O lint não apresentou erros; seus 14 avisos indicam versões mais recentes de dependências. Os detalhes da execução no emulador ficam em [verification/REFERENCIA_VISUAL.md](verification/REFERENCIA_VISUAL.md).
+Na evolução Cadency, passaram **43 testes em debug e 40 em release**. O lint não apresentou erros; os avisos restantes incluem sugestões de atualização das dependências, pluralização e recursos antigos sem uso. Os resultados da interface e os detalhes da versão atual ficam em [verification/CADENCY_EVOLUCAO.md](verification/CADENCY_EVOLUCAO.md).
 
 ### Roteiro de aceitação no aparelho
 
 Entre com a conta demo; crie um plano; confira a data no dia, semana e mês; edite; conclua e reabra; force a parada pelo Android e abra novamente; confirme os dados; exclua; navegue entre períodos; faça logout e login novamente. Verifique também uma prioridade e um plano adicionado pelo atalho **Para amanhã**.
 
+### Testar os novos recursos
+
+| Recurso | Roteiro |
+| --- | --- |
+| Hábitos | Abra Hábitos → Adicionar hábito. Escolha frequência e dias (ou meta semanal), salve, conclua hoje e desfaça. Toque no nome para editar, ver Histórico, arquivar ou excluir. Navegue entre semanas para conferir as datas reais. |
+| Etapas | Toque em uma tarefa → Próxima etapa → botão +. Marque, use o menu para mover ou remover e conclua todas. O app pergunta antes de concluir a tarefa. |
+| Gentle Rollover | Crie uma tarefa com data anterior. Volte a Hoje: a revisão aparece uma vez no dia; o botão “Vamos reorganizar?” permite abrir manualmente. Experimente Hoje, outra data, Inbox e descarte. A Caixa de entrada permite agendar o item novamente. |
+| Modo Agora | Em Hoje, toque Entrar no Modo Agora. Confira a tarefa escolhida, pule temporariamente, conclua ou inicie foco. Pular não altera o item no banco. |
+| Focus Flow | Abra por Hoje, Modo Agora ou detalhes da tarefa. Escolha duração ou Personalizado, inicie, pause e retome. Saia e volte, inclusive após reiniciar o processo. Ao encerrar antecipadamente, confirme o diálogo. Uma sessão de pelo menos um minuto aparece nas métricas de foco. |
+| Meu Ritmo | Abra Progresso e alterne 7/30 dias. Confira tarefas, hábitos, foco e dias planejados. Toque nas barras para ver a data/valor; role para consistência e insights. Sem registros, os valores são zero e há uma mensagem de acolhimento. |
+| Aparência | Abra a engrenagem → Aparência. Combine os quatro estilos com Claro/Escuro. Em Sistema, altere o modo do dispositivo. Feche/reabra o app para conferir persistência. |
+| Ritmo semanal | Compare dias com tarefas LOW/MEDIUM/HIGH ainda abertas. Os pontos diminuem ao concluir. Não contam eventos, Inbox ou itens descartados. |
+
+As sessões de foco registram milissegundos reais e excluem pausas. A interface de Progresso soma as sessões encerradas e mostra minutos inteiros; por isso, testes de poucos segundos podem ainda mostrar zero minutos.
+
 ## Decisões de projeto
 
 - **Compose:** permite construir telas declarativas e componentes reutilizáveis, acompanhando o estado observado sem telas XML ou várias Activities.
-- **Room:** valida consultas em compilação, mantém dados estruturados no aparelho e emite Flows quando eles mudam. Os schemas v1 e v2 são versionados; a migration 1→2 adiciona os campos do diário e a tabela de hábitos sem apagar os dados existentes.
-- **DataStore:** mantém o pequeno estado de sessão de maneira assíncrona. Tarefas, humor e notas ficam no Room.
+- **Room:** valida consultas em compilação e emite Flows quando os dados mudam. Os schemas 1/2/3 e migrations são versionados. A migration 2→3 adiciona hábitos recorrentes/check-ins, subtarefas, sessões de foco e campos de rollover/conclusão. Subtarefas usam CASCADE; excluir uma tarefa anula sua referência na sessão de foco e preserva a sessão.
+- **DataStore:** mantém sessão, aparência, opção de rollover e última revisão diária de maneira assíncrona. Dados estruturados ficam no Room.
 - **Autenticação local:** permite estudar e executar o MVP offline sem configurar serviços externos. `AuthRepository` define a sessão e as operações de login/logout, isolando as credenciais da interface.
 - **Firebase no futuro:** implemente `AuthRepository` com Firebase Authentication e forneça a implementação pelo `AppContainer`. ViewModel e UI continuam consumindo o mesmo contrato. Contas reais também exigirão vincular os dados do planner ao ID do usuário e definir a estratégia de sincronização.
 - **Datas:** `java.time` calcula os períodos. Datas são persistidas como epoch day e horários como minutos desde meia-noite. A semana começa na segunda; o calendário mensal começa no domingo. Dias vizinhos completam as linhas do calendário.
 - **Para amanhã:** o atalho diário cria um item com a data real do dia seguinte. A seção mostra os planos ainda pendentes dessa data; quando o dia chega, eles aparecem normalmente na agenda correspondente.
-- **Tema:** a paleta, dimensões, shapes e tipografia estão em `ui/theme`. As opções futuras no perfil são textos informativos, sem controles simulados.
+- **Tema:** oito paletas centralizadas em `CadencyPalette`, com dimensões, shapes e tipografia em `ui/theme`. `PlannerTheme` combina o mood visual com SYSTEM/LIGHT/DARK; SYSTEM usa `isSystemInDarkTheme`. Humor emocional do diário é um dado independente.
+- **Gráficos:** Canvas/Compose desenha duas séries simples sem dependência extra. Inclui dias zerados, seleção por toque, descrições acessíveis e cores do tema.
 - **Estado:** seleções de datas e rascunho do formulário usam `SavedStateHandle`; dados salvos são observados pelo Room. Logout preserva os planos da única conta local demo.
 
 ## Limitações e próximos passos
 
-O MVP tem somente uma conta local, tema claro e categorias fixas. Não possui sincronização, cadastro real, recorrência, alarmes ou notificações. Os horários pertencem ao mesmo dia: o fim deve ser posterior ao início. Desinstalar o app ou limpar seus dados remove a base local; não há backup nesta versão.
+O MVP tem uma conta local e categorias fixas. Não possui sincronização, cadastro real, recorrência de tarefas, alarmes, sons ou notificações. Hábitos têm recorrência própria. O timer usa timestamps persistidos: continua contando ao sair e é reconciliado ao retornar, sem serviço de primeiro plano nem aviso em segundo plano. As sessões são atribuídas ao dia de início; minutos exibidos são a soma do tempo real encerrado, arredondada para baixo por dia. Horários de compromissos pertencem ao mesmo dia. Desinstalar ou limpar os dados remove a base local; não há backup nesta versão.
 
-Próximos passos recomendados: concluir a aceitação em celular físico, revisar TalkBack e fonte ampliada, adicionar exportação/backup, paletas e preferências, depois autenticação real com dados por usuário e sincronização. Alarmes e recorrência podem ser adicionados em uma etapa específica.
+Alterar a frequência de um hábito aplica a definição atual ao cálculo histórico; versionamento de agendas é uma evolução futura. Metas semanais são proporcionais aos dias elegíveis no período, arredondadas para cima; porcentagens são limitadas a 100%. Registros antigos sem data de conclusão usam a data planejada. Não há IA nem pontuação de produtividade.
+
+Próximos passos: aceitação em celular físico, TalkBack e fonte ampliada, exportação/backup, notificações de foco e, depois, autenticação real com dados por usuário e sincronização.
 
 O repositório Git preserva os commits por etapa e o commit inicial do GitHub. A branch principal é `main`, com remoto `origin` em `https://github.com/astrofl4me/cadency-app.git`. Build, SDK, cache, `local.properties`, arquivos de IDE e chaves não são versionados; APKs são entregues por artifacts, fora do histórico Git.
 
